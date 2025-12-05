@@ -1,11 +1,9 @@
 ---
 layout: default
-title: "About
-Urban Traﬃc Inference with Perimeter Vision & Encrypted-Camera Side-Channel Extraction"
+title: "Urban Traﬃc Inference with Perimeter Vision & Encrypted-Camera Side-Channel Extraction"
 ---
 
-# **About
-Urban Traﬃc Inference with Perimeter Vision & Encrypted-Camera Side-Channel Extraction**
+# **Urban Traﬃc Inference with Perimeter Vision & Encrypted-Camera Side-Channel Extraction**
 
 *A concise, descriptive title for your project.*
 
