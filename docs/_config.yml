@@ -4,7 +4,7 @@ show_downloads: true
 # google_analytics:[Your Google Analytics tracking ID]
 
 # Name of website
-title: "EC M202A Project - Urban Traﬃc Inference with Perimeter Vision & Encrypted-Camera Side-Channel Extraction"
+title: "EC M202A Final Project"
 description: "Course project website for EC M202A / CS M213A"
 # For user pages, url should be "https://username.github.io" and baseurl: ""
 # For project pages hosted at "https://username.github.io/repo-name", set url
