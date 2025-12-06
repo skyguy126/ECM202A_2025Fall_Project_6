@@ -22,8 +22,9 @@ import argparse
 import json
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+import argparse
 
-from util import FPS
+FPS = 20
 
 # ----------------------------
 # CONFIG
@@ -100,85 +101,65 @@ def pcap_to_frame(pcap_path):
 
     return np.array(data_frames)
 
-def frames_to_events(data):
+def frames_to_events(data, args):
     """Convert frame-level data to car detection events."""
     events = []
     final_events = []
 
-    # remove i-frames
-    frame_sizes = data[:,1].copy()
+    normalized_data = data[:,1].copy()
 
-    mean = np.mean(frame_sizes)
-    std = np.std(frame_sizes)
+    mean = np.mean(normalized_data)
+    std = np.std(normalized_data)
+    normalized_data = (normalized_data - mean) / std
 
-    print("mean: ", mean)
-    print("std: ", std)
-    frame_sizes = (frame_sizes - mean) / std
+    fig, axs = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
 
-    threshold = 2
-    for i in range(len(frame_sizes)):
-        if frame_sizes[i] > threshold: 
-            data[i][1] = 0
-            frame_sizes[i] = 0
+    # All Data
+    axs[0].plot(data[:,0], data[:,1])
+    axs[0].set_xlabel("Frame Index")
+    axs[0].set_ylabel("Frame Size")
+    axs[0].set_title("Frame Size vs Frame Index")
 
-    # plt.figure(figsize=(12,5))
-    # plt.plot(data[:,0], data[:,1])
-    # plt.xlabel("Frame Index")
-    # plt.ylabel("Frame Size")
-    # plt.title("Frame Size vs Frame Index with i-frames removed")
-    # plt.show()
+    # i-frames removed
+    axs[1].plot(data[:,0], normalized_data)  
+    axs[1].set_xlabel("Frame Index")
+    axs[1].set_ylabel("Frame Size")
+    axs[1].set_title("Frame Size vs Frame Index (Normalized)")
 
-    normalized_data = data[:,1]/np.max(data[:,1])
-    plt.figure(figsize=(12,5))
-    plt.plot(data[:,0], normalized_data)
-    # plt.scatter(data[3900:4100,0], normalized_data[3900:4100])
-    plt.xlabel("Frame Index")
-    plt.ylabel("Frame Size")
-    plt.title("Normalized Frame Size vs Frame Index with i-frames removed")
+    plt.tight_layout()
     plt.show()
-    # return []
 
-    while True:
-        user_input = input("Enter window size, threshold_size and required fraction of window (how much of window above threshold) separated by a comma (or 'x' to exit): ")
-        
-        if user_input.lower() == 'x':
-            print("Exiting.")
-            break
-        
-        try:
-            win_length_str, threshold_size_str, required_fraction_str = user_input.split(',')
-            win_length = int(win_length_str.strip())
-            threshold_size = float(threshold_size_str.strip())
-            required_fraction = float(required_fraction_str.strip())
-        except ValueError:
-            print("Invalid input. Please enter three numbers separated by commas.")
-            continue
+    # don't include noise in mean
+    mean = normalized_data[normalized_data > 0.01].mean()
+    print(np.sum(normalized_data[normalized_data > 0.01]), " frames are bigger than 0.01")
 
-        print("More than ", required_fraction * win_length, " out of ", win_length, " must exceed ", threshold_size)
-        events.clear()  # clear previous events
-        final_events.clear()
-        for idx, size in enumerate(normalized_data[0:-win_length]):
-            over_count = np.sum(normalized_data[idx:idx+win_length] > threshold_size)
-            if over_count / float(win_length) >= required_fraction:
-                events.append(idx)
+    win_length = args.window
+    threshold_size = mean
+    required_fraction = args.threshold
 
-        if len(events) > 0:
-            # prune events down to single events
-            final_events.append(events[0])
-            for idx in range(1,len(events)):
-                if events[idx] - events[idx-1] > 30:
-                    final_events.append(events[idx])
+    print("More than ", required_fraction * win_length, " out of ", win_length, " must exceed ", threshold_size)
+    events.clear()  # clear previous events
+    final_events.clear()
+    for idx, size in enumerate(normalized_data[0:-win_length]):
+        over_count = np.sum(normalized_data[idx:idx+win_length] > threshold_size)
+        if over_count / float(win_length) >= required_fraction:
+            events.append(idx)
 
-        print(f"Detected events at indices: {final_events}")
+    if len(events) > 0:
+        # prune events down to single events
+        final_events.append(events[0])
+        for idx in range(1,len(events)):
+            if events[idx] - events[idx-1] > 30 and idx > 10: # ignore beginning noise
+                final_events.append(events[idx])
+
+    print(f"Detected events at indices: {final_events}")
     
-        
     return final_events
 
 def print_events(events):
     """Print detected events."""
     for event in events:
         print(f"detected an event at frame {event}")
-        # print(f"Detected a car from frame {event['start']} to {event['end']}")
 
 def plot_frame_data(data, output_png="tmp/frame_plot.png"):
 
@@ -222,12 +203,14 @@ def main():
         description="Convert pcap to npy array of frame-level features"
     )
     parser.add_argument("-f", "--pcap-file", type=str, help="Path to the pcap file to process")
+    parser.add_argument("-t", "--threshold", type=float, default=0.15, help="Replace default threshold of 15%% of window")
+    parser.add_argument("-W", "--window", type=int, default=100, help="Replace default window width of 100")
 
     args = parser.parse_args()
 
     data = pcap_to_frame(args.pcap_file)
     plot_frame_data(data)
-    events = frames_to_events(data)
+    events = frames_to_events(data, args)
     print_events(events)
 
 if __name__ == "__main__":
