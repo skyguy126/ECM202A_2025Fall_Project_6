@@ -13,7 +13,7 @@ def main():
     util.common_init()
     
     # Create videos directory if it doesn't exist
-    videos_dir = "videos"
+    videos_dir = "/media/ubuntu/Samsung/carla/demo/three_cars_1_6_8"
     os.makedirs(videos_dir, exist_ok=True)
     
     client = carla.Client("localhost", 2000)
@@ -86,10 +86,20 @@ def main():
     print(f"\nSpawned {len(camera_data)} cameras. Recording started.")
     print("Press Ctrl+C or ESC to quit.\n")
     
+    # Dictionary to store vehicle positions: {vehicle_id: [(frame_num, x, y), ...]}
+    vehicle_positions = {}
+    current_frame = 0  # Track current frame number (0-indexed)
+    total_frames = 0  # Track total number of frames/ticks
+    
     try:
         while True:
             # Advance the simulation by one fixed step
             world_frame = world.tick()
+            total_frames += 1
+            
+            # Collect vehicle positions before processing frames (use 0-indexed frame number)
+            util.collect_vehicle_positions(world, vehicle_positions, current_frame)
+            current_frame += 1
             
             # Get frames from all cameras
             for cam_info in camera_data:
@@ -133,6 +143,44 @@ def main():
                 cam_info['ffmpeg_proc'].stdin.close()
             cam_info['ffmpeg_proc'].wait()
             print(f"Camera {cam_info['id']} saved to {cam_info['filename']}")
+        
+        # Save vehicle positions to numpy txt files
+        print("\nSaving vehicle positions...")
+        for vehicle_id, positions in vehicle_positions.items():
+            if len(positions) > 0:
+                # Extract frame numbers and positions
+                # positions is a list of (frame_number, x, y) tuples
+                first_frame = positions[0][0]  # Frame when vehicle first appeared
+                last_frame = positions[-1][0]  # Frame when vehicle last appeared
+                
+                # Extract just the x, y coordinates
+                xy_positions = np.array([[x, y] for _, x, y in positions])
+                
+                # Calculate padding needed
+                pad_before = first_frame  # Zeros before vehicle appeared (frames 0 to first_frame-1)
+                pad_after = total_frames - 1 - last_frame  # Zeros after vehicle disappeared
+                
+                # Create padding arrays
+                padding_before = np.zeros((pad_before, 2)) if pad_before > 0 else np.empty((0, 2))
+                padding_after = np.zeros((pad_after, 2)) if pad_after > 0 else np.empty((0, 2))
+                
+                # Concatenate: padding_before + positions + padding_after
+                if pad_before > 0 and pad_after > 0:
+                    positions_array = np.vstack([padding_before, xy_positions, padding_after])
+                elif pad_before > 0:
+                    positions_array = np.vstack([padding_before, xy_positions])
+                elif pad_after > 0:
+                    positions_array = np.vstack([xy_positions, padding_after])
+                else:
+                    positions_array = xy_positions
+                
+                # Ensure we have exactly total_frames rows
+                assert len(positions_array) == total_frames, f"Expected {total_frames} frames, got {len(positions_array)}"
+                
+                # Save as txt file
+                filename = os.path.join(videos_dir, f"vehicle_{vehicle_id}_positions.txt")
+                np.savetxt(filename, positions_array, fmt='%.6f', delimiter=',')
+                print(f"Vehicle {vehicle_id} positions saved to {filename} (padded to {len(positions_array)} frames: {pad_before} before, {len(xy_positions)} actual, {pad_after} after)")
         
         cv2.destroyAllWindows()
         print("All cameras stopped.")
