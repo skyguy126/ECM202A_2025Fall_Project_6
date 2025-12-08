@@ -201,7 +201,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Convert pcap to npy array of frame-level features"
     )
-    parser.add_argument("-f", "--pcap-file", type=str, required=True, help="Path to the pcap file to process. Enter a folder to process all pcaps in that folder.")
+    parser.add_argument("pcap_file", help="Path to the pcap file to process. Enter a folder to process all pcaps in that folder.")
     parser.add_argument("-o", "--output_dir", type=str, help="Specify an output location. Default is the same directory as your input file.")
 
     args = parser.parse_args()

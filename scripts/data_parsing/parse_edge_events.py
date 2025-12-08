@@ -124,7 +124,7 @@ def write_event_data_to_file(event_data, input_file, out_dir=OUTPUT_DIR):
 
 def main():
     parser = argparse.ArgumentParser(description="Parse car detection events from JSON.")
-    parser.add_argument("-f", "--file", help="Path to camera input JSON file")
+    parser.add_argument("file", help="Path to camera input JSON file")
     args = parser.parse_args()
 
     data = load_data(args.file)
