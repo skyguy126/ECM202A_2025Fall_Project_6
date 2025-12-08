@@ -3,8 +3,6 @@ import argparse
 import os
 from pathlib import Path
 
-OUTPUT_DIR = "out/"
-
 def load_data(path):
     with open(path, "r") as f:
         return json.load(f)
@@ -93,18 +91,13 @@ def print_event_data(event_data):
         print(f"Frame {frame}: Car ID {car_id} | Position {location}")
     print("==========================================\n")
 
-def write_event_data_to_file(event_data, input_file, out_dir=OUTPUT_DIR):
-    """Write event data to a JSON file in the same dir as input file."""
-    # Create out/ directory if it doesn't exist
-    out_dir = Path(input_file).parent
-    out_dir = Path(os.path.join(out_dir, "events"))
-    out_dir.mkdir(exist_ok=True)
-    
-    # Get the input filename without extension
-    input_path = Path(input_file)
-    output_filename = Path(input_file).stem.replace("_input", "") + "_events.json"
-    output_path = out_dir / output_filename
-    
+def write_event_data_to_file(event_data, input_file, out_dir, camera_id):
+
+    events_file = f"camera_{camera_id}_events.json"
+    events_dir = Path(os.path.join(out_dir, "events"))
+    events_dir.mkdir(parents=True,exist_ok=True)
+    events_path = Path(os.path.join(events_dir, events_file))
+
     # Convert event_data tuples to dictionaries for JSON serialization
     events_list = [
         {
@@ -116,25 +109,47 @@ def write_event_data_to_file(event_data, input_file, out_dir=OUTPUT_DIR):
     ]
     
     # Write to JSON file
-    with open(output_path, "w") as f:
+    with open(events_path, "w") as f:
         json.dump(events_list, f, indent=2)
     
-    print(f"Events written to {output_path}")
+    print(f"Events written to {events_path}")
 
 
 def main():
     parser = argparse.ArgumentParser(description="Parse car detection events from JSON.")
-    parser.add_argument("file", help="Path to camera input JSON file")
+    parser.add_argument("file", help="Path to camera input JSON file. Enter a directory to parse all json files in that directory.")
+    parser.add_argument("-o", "--output_dir", type=str, help="Specify an output location. Default is events/ in the same directory as your input file.")
+
     args = parser.parse_args()
 
-    data = load_data(args.file)
-    events = get_detection_events(data)
-    print_events(events)
-    
-    event_data = extract_event_data(events, data)
-    print_event_data(event_data)
-    
-    write_event_data_to_file(event_data, args.file)
+    json_path = Path(args.file)
+
+    if json_path.is_dir():
+        output_dir = json_path
+        for json_file in json_path.glob("*.json"):
+            camera_id = json_file.stem.split("_")[1]
+
+            print(f"Parsing {json_file}...")
+            data = load_data(json_file)
+            events = get_detection_events(data)
+            
+            event_data = extract_event_data(events, data)
+            print_event_data(event_data)
+            
+            write_event_data_to_file(event_data, json_file, output_dir, camera_id)
+
+    else:
+        output_dir = str(Path(args.pcap_file).parent)
+        camera_id = json_file.stem.split("_")[1]
+        
+        data = load_data(args.file)
+        events = get_detection_events(data)
+        print_events(events)
+        
+        event_data = extract_event_data(events, data)
+        print_event_data(event_data)
+        
+        write_event_data_to_file(event_data, args.file, output_dir, camera_id)
 
 if __name__ == "__main__":
     main()
