@@ -97,6 +97,7 @@ def write_event_data_to_file(event_data, input_file, out_dir=OUTPUT_DIR):
     """Write event data to a JSON file in the same dir as input file."""
     # Create out/ directory if it doesn't exist
     out_dir = Path(input_file).parent
+    out_dir = Path(os.path.join(out_dir, "events"))
     out_dir.mkdir(exist_ok=True)
     
     # Get the input filename without extension
