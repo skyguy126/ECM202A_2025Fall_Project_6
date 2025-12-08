@@ -114,6 +114,7 @@ Recommended subsections:
 - The CARLA simulator runs in synchronous mode. This can reduce control accuracy because the control loop operates at a lower tick rate (20 FPS to match the camera frame rate). Asynchronous simulation would normally decouple the control algorithm from perception processing and maintain a fixed timestep, but due to resource constraints this project uses CARLA in synchronous mode.
 - The edge camera multi-vantage tracking approah uses a hardcoded value for the cosine similarity threshold. This value should be dynamically derived based on current scene and environment conditions to ensure stability between different CARLA maps and vehicles.
 - This project uses deterministic vehicle route mapping to further allow control for result replication.
+- Edge cameras were placed overhead to allow for clean data collection but this is often not represtntative of reality.
 
 ### **3.1 System Architecture**
 Include a block diagram or pipeline figure.
