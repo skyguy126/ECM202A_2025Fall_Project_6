@@ -105,14 +105,60 @@ Use figures generously:
 
 Recommended subsections:
 
+### **3.0 Assumptions & Proposed Solutions**
+
+- At any given time, only one car occupies any camera's field of view.
+- Each camera transmits only to its associated access point, with no other traffic on that link; therefore all WiFi traffic observed on that network originates from the camera.
+- The WiFi sniffer is positioned so it is within range of only a single camera/access-point pair at any given time, preventing capture of unrelated over-the-air traffic.
+- The multi-vantage identification system generates embeddings solely from vehicle appearance without incorporating temporal or spatial metadata. It performs reliably when vehicle colors differ significantly, but error rates may increase when vehicles have similar appearances.
+- The CARLA simulator runs in synchronous mode. This can reduce control accuracy because the control loop operates at a lower tick rate (20 FPS to match the camera frame rate). Asynchronous simulation would normally decouple the control algorithm from perception processing and maintain a fixed timestep, but due to resource constraints this project uses CARLA in synchronous mode.
+- The edge camera multi-vantage tracking approah uses a hardcoded value for the cosine similarity threshold. This value should be dynamically derived based on current scene and environment conditions to ensure stability between different CARLA maps and vehicles.
+- This project uses deterministic vehicle route mapping to further allow control for result replication.
+
 ### **3.1 System Architecture**
 Include a block diagram or pipeline figure.
 
 ### **3.2 Data Pipeline**
 Explain how data is collected, processed, and used.
 
+#### CARLA Setup
+
+The CARLA simulator is instianted via the `pylot` docker container and all ports are exposed on the host. The simulator is run within a docker container to ensure reproducability and easy sharing of dependencies. All ephermal code and data collection is executed on the host itself.
+
+#### Camera Capture
+
+We place multiple static RGB cameras in the map using the preset poses in `util.CAMERA_CONFIGS`, so every run sees the same streets from the same angles. Each camera is 1280×720, 90° FOV, and runs at 20 FPS to match the simulator tick. CARLA delivers frames as raw bytes; we push them into a per-camera queue to decouple capture from disk writes (avoids dropped frames if storage hiccups).
+
+For storage we stream raw BGR frames to `ffmpeg` over stdin and encode with H.264 into per-camera MP4 files (`/media/ubuntu/Samsung/carla/demo/two_cars_6_8/camera_<id>.mp4`). This piped approach keeps quality high while using a widely supported codec. The control loop calls `world.tick()`, drains queues, sanity-checks frame size, and logs warnings if an encoder fails—other cameras keep running so a single failure doesn’t stop the experiment.
+
+At the same tick rate we log every vehicle’s world (x, y) position. The z position is assumed to be 0. We pad zeros before a vehicle appears and after it leaves so each `vehicle_<id>_positions.txt` has exactly one row per frame; this makes it easy to align trajectories with the videos later. (References: piping raw frames to FFmpeg for Python workflows is a standard pattern; see ffmpeg-python docs and common Stack Overflow examples.)
+
+#### Mininet WiFi
+
+We emulate camera-to-AP WiFi links in software using Mininet-WiFi to avoid needing physical radios while still running the real Linux TCP/IP stack. The `two_stations_wifi.py` topology keeps things minimal: one access point (`ap1`) and two stations (`sta1` sender, `sta2` receiver). We use `wmediumd` with an interference model so packets still traverse a simulated wireless channel rather than a zero-loss virtual wire.
+
+Before streaming, we bring up a monitor-mode interface (`hwsim0`) and start `tcpdump` to capture over-the-air traffic into per-video PCAPs. `sta1` replays each MP4 with `ffmpeg -re ... -f mpegts udp://10.0.0.201:5000`, while `sta2` listens with `ffmpeg` and discards payloads; only timing, lengths, and bursts matter for side-channel features. After each video, captures are closed cleanly to keep PCAPs aligned to a single clip.
+
+Why Mininet(-WiFi)? It runs real kernel networking on one machine, scales with modest resources, and exposes a Python API to script topologies, mobility, and SDN-style control. That makes it faster to iterate than hardware testbeds while remaining more realistic than pure packet-level simulators; the community and docs (e.g., mininet.org) also simplify debugging and reproducibility.
 ### **3.3 Algorithm / Model Details**
-Use math, pseudocode, or diagrams as needed.
+
+#### **Edge Camera** Multi-Vantage Tracking
+
+We run two prerecorded edge videos (cameras 4 and 5) frame-by-frame. Each frame goes through YOLOv8x for detection plus ByteTrack for short-term tracking, which yields a box and a per-camera track id for each vehicle. We crop the box and pass it to an OSNet ReID network to get a 512-D appearance embedding; OSNet is used because it is lightweight and pretrained for person/vehicle re-identification, so it works well without heavy fine-tuning. The bottom-center of each box is projected into world coordinates using calibrated intrinsics/extrinsics so both cameras report positions in the same frame. A global appearance tracker keeps a cross-camera gallery: cosine similarity (threshold 0.65) links new embeddings to existing global IDs, otherwise it spawns a new one. To smooth noise, gallery embeddings are updated with a running average (80% previous, 20% new). We log per-frame JSON with camera pose, global/local IDs, and estimated world positions; this compact log is later used by the fusion step without needing to replay video. Key design choices for non-experts: YOLO+ByteTrack gives robust boxes and stable short tracks; appearance-only matching (no timing/GPS) avoids needing synchronization; the similarity threshold trades off false merges vs. splits; the running average keeps IDs stable even if a single frame is noisy.
+
+#### **Inner-Camera** Side Channel PCAP Feature Extraction
+
+##### Deterministic Approach
+
+WIP Katherine
+
+##### Machine Learning Approach
+
+WIP Vamsi
+
+#### Final Fusion Algorithm
+
+WIP Katherine/Amy 
 
 ### **3.4 Hardware / Software Implementation**
 Explain equipment, libraries, or frameworks.
