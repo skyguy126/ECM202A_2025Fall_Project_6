@@ -1,0 +1,56 @@
+[
+  {
+    "event": 1,
+    "start_s": 12.95,
+    "end_s": 15.5,
+    "duration": 2.5500000000000007
+  },
+  {
+    "event": 2,
+    "start_s": 24.45,
+    "end_s": 26.1,
+    "duration": 1.6500000000000021
+  },
+  {
+    "event": 3,
+    "start_s": 62.4,
+    "end_s": 69.2,
+    "duration": 6.800000000000004
+  },
+  {
+    "event": 4,
+    "start_s": 74.7,
+    "end_s": 76.7,
+    "duration": 2.0
+  },
+  {
+    "event": 5,
+    "start_s": 112.15,
+    "end_s": 114.7,
+    "duration": 2.549999999999997
+  },
+  {
+    "event": 6,
+    "start_s": 124.4,
+    "end_s": 127.45,
+    "duration": 3.049999999999997
+  },
+  {
+    "event": 7,
+    "start_s": 162.05,
+    "end_s": 164.3,
+    "duration": 2.25
+  },
+  {
+    "event": 8,
+    "start_s": 213.2,
+    "end_s": 214.85,
+    "duration": 1.6500000000000057
+  },
+  {
+    "event": 9,
+    "start_s": 249.85,
+    "end_s": 251.55,
+    "duration": 1.700000000000017
+  }
+]
