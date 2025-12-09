@@ -62,6 +62,8 @@ Modern cities rely on surveillance for traffic management, but continuous tracki
 
 Use the introduction to clearly set context, describe motivation, and explain the central idea behind your project.
 
+Emerging smart cities grapple with the trade-off between ubiquitous surveillance for traffic management and privacy intrusion. Our project explores a novel approach to urban vehicle tracking that leverages video coverage at a zone’s perimeter and side-channel analysis of encrypted camera feeds within the zone. By combining these heterogeneous data sources: high-fidelity visual detection at entry/exit points and coarse motion cues from encrypted network traffic, we aim to continuously track vehicles as they roam within an urban area.
+
 ### **1.1 Motivation & Objective**  
 What are you trying to do and why is it important? Explain in accessible, non-jargon terms.
 
