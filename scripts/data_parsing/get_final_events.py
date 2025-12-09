@@ -3,6 +3,8 @@ import json
 from glob import glob
 import argparse
 
+FPS = 20
+
 # Example camera config
 # Camera configurations
 CAMERA_CONFIGS = [
@@ -50,7 +52,9 @@ def synthesize_edge_events(edge_path):
     for file_path in glob(os.path.join(edge_path, "*.json")):
         with open(file_path, "r") as f:
             data = json.load(f)
-            edge_events.extend(data)
+            for event in data:
+                event["time"] = event["frame"] / FPS
+                edge_events.append(event)
     edge_events.sort(key=lambda e: e["frame"])
     return edge_events
 
