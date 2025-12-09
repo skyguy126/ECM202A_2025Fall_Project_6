@@ -100,6 +100,16 @@ Implementing the proposed system presents several challenges.
 ### **1.6 Metrics of Success**  
 What are the specific, measurable criteria for evaluating your project?
 
+We evaluate our system on several specific criteria.
+
+- Tracking Accuracy: We compare the system’s estimated vehicle trajectories and counts against ground-truth data from the CARLA simulator. Metrics include the count error (difference between actual number of vehicles in the zone and our estimate over time) and track continuity metrics from multi-object tracking literature (e.g. identity switches, false positives/negatives). A successful outcome would be high accuracy in maintaining the correct count of vehicles and correctly keeping identities from entry to exit. For example, we might use the Multi-Object Tracking Accuracy (MOTA) or **(TODO: what is this??)** ID F1-score to quantify this. Dwell Time 
+- Error: We measure how accurately we estimate each vehicle’s dwell time inside the zone (time between entry and exit). The goal is to be within a small margin (e.g. within a few seconds of ground truth).
+- Localization Coarseness: Although we do not attempt fine-grained positioning for interior vehicles, we evaluate whether the system’s coarse position estimates (based on nearest camera region) are correct. For instance, if the side-channel indicates activity at a particular interior camera, do we correctly attribute it to a vehicle near that camera?
+- Latency: We assess the delay between a real event (vehicle enters, moves, exits) and the system’s detection or update of that event. The system should operate in real-time or near-real-time. We log the time it takes for a WiFi motion spike to be processed and integrated into the tracker, and for an edge detection to create or update a track. Ideally, this latency is low enough for practical use (on the order of one frame, e.g. <0.1s in simulation).
+- Resource Usage: We monitor computational load and network overhead. A key metric is whether the fusion algorithm runs faster than real-time on our hardware (if it cannot keep up with the 20 FPS camera rate, that’s a failure). We also note network bandwidth used by our side-channel monitoring (the Wireshark/pcap data capture) to ensure it’s minimal. 
+
+Success is defined by meeting target thresholds in these metrics – for example, maintaining >90% tracking accuracy, <1 vehicle count error most of the time, identification fidelity across cameras, and real-time performance.
+
 ---
 
 # **2. Related Work**
