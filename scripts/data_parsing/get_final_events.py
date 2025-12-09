@@ -50,9 +50,17 @@ CAMERA_MAP = {cam["id"]: cam for cam in CAMERA_CONFIGS}
 def synthesize_edge_events(edge_path):
     edge_events = []
     for file_path in glob(os.path.join(edge_path, "*.json")):
+        base_name = os.path.basename(file_path)
+        try:
+            cam_id = int(base_name.split("_")[1])
+        except (IndexError, ValueError):
+            print(f"Skipping file with unexpected name format: {file_path}")
+            continue
+
         with open(file_path, "r") as f:
             data = json.load(f)
             for event in data:
+                event["camera_id"] = cam_id
                 event["time"] = event["frame"] / FPS
                 edge_events.append(event)
     edge_events.sort(key=lambda e: e["frame"])
