@@ -128,8 +128,8 @@ def load_json_data(filepath, is_edge_file=False):
             # Position
             x, y = None, None
             pos_raw = None
-            for k in ['location', 'Position', 'position', 'pos', 'Location']:
-                if k in item: pos_raw = item[k]; break
+            # for k in ['location', 'Position', 'position', 'pos', 'Location']:
+            #     if k in item: pos_raw = item[k]; break
             
             if pos_raw:
                 if isinstance(pos_raw, dict): x, y = pos_raw.get('x'), pos_raw.get('y')
@@ -169,6 +169,7 @@ def load_json_data(filepath, is_edge_file=False):
 def run_demo(edge_data, inner_data):
     CURR_STATE = {} 
     OUTPUT_LOG = [] 
+    ALL_EVENTS = []  # Store all events with their details
 
     edge_ts = set(round(x[0], 1) for x in edge_data)
     inner_ts = set(round(x[0], 1) for x in inner_data)
@@ -196,6 +197,15 @@ def run_demo(edge_data, inner_data):
                 event = edge_data[e_ptr]
                 loc, cid, cam_id = event[1:3], event[3], event[4]
                 
+                # Record edge event
+                ALL_EVENTS.append({
+                    'type': 'edge',
+                    'timestamp': round(event[0], 2),
+                    'location': {'x': round(loc[0], 2), 'y': round(loc[1], 2)},
+                    'car_id': cid,
+                    'camera_id': cam_id
+                })
+                
                 if cid not in CURR_STATE:
                     print(f"[{curr_ts:.1f}s] Cam {cam_id}: Car {cid} ENTERED")
                     CURR_STATE[cid] = Car_KF(cid, loc, curr_ts)
@@ -216,6 +226,16 @@ def run_demo(edge_data, inner_data):
                 
                 # Assign to best-matching car
                 matched = identify_event_softmax(CURR_STATE, loc)
+                
+                # Record inner event
+                ALL_EVENTS.append({
+                    'type': 'inner',
+                    'timestamp': round(event[0], 2),
+                    'location': {'x': round(loc[0], 2), 'y': round(loc[1], 2)},
+                    'car_id': matched if matched else None,
+                    'camera_id': cam_id
+                })
+                
                 if matched:
                     print(f"[{curr_ts:.1f}s] Cam {cam_id}: Matched Car {matched}")
                     CURR_STATE[matched].update(loc, cam_type='inner')
@@ -229,7 +249,7 @@ def run_demo(edge_data, inner_data):
                 'est_y': round(car.state[1], 2)
             })
 
-    return pd.DataFrame(OUTPUT_LOG)
+    return pd.DataFrame(OUTPUT_LOG), ALL_EVENTS
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -243,16 +263,23 @@ if __name__ == "__main__":
     edge_path = os.path.join(base_path, "all_edge_events.json")
 
     out_file = os.path.join(base_path, "final_trajectory.csv")
+    events_file = os.path.join(base_path, "final_events.json")
 
     inner_data = load_json_data(inner_path, is_edge_file=False)
     edge_data = load_json_data(edge_path, is_edge_file=True)
 
     if inner_data or edge_data:
-        df = run_demo(edge_data, inner_data)
+        df, all_events = run_demo(edge_data, inner_data)
+        
+        # Save all events to JSON file
+        if all_events:
+            with open(events_file, 'w') as f:
+                json.dump(all_events, f, indent=2)
+            print(f"\n[DONE] Saved {len(all_events)} events to '{events_file}'")
         
         if not df.empty:
             df.to_csv(out_file, index=False)
-            print(f"\n[DONE] Saved {len(df)} rows to '{out_file}'")
+            print(f"[DONE] Saved {len(df)} rows to '{out_file}'")
             print(df.head())
         else:
             print("\n[WARNING] No tracks generated.")
