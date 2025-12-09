@@ -67,6 +67,8 @@ Emerging smart cities grapple with the trade-off between ubiquitous surveillance
 ### **1.1 Motivation & Objective**  
 What are you trying to do and why is it important? Explain in accessible, non-jargon terms.
 
+Urban mobility applications (e.g. congestion control, emergency response) require knowing how many vehicles are in a given area, where they are, and how long they dwell. Today’s cities often rely on fixed cameras or sensor networks, but full coverage is impractical and raises privacy issues. For instance, automated license plate reader (ALPR) systems can log vehicles entering or exiting a town, but cannot monitor movements once inside and pose serious privacy concerns **[ADD CITATION]**. Our objective is to maintain real-time awareness of vehicles in a city zone without blanket surveillance. We propose to achieve this by fusing perimeter camera vision with encrypted-camera side-channel data. Encrypted video streams, such as those from private interior cameras, inadvertently leak information through their bitrate patterns, which correlate with scene motion **[ADD CITATION]**. By monitoring these side-channel signals, we can infer when and where vehicle motion occurs inside the zone, then combine that with multi-vantage perimeter detections to track vehicles continuously. This approach is important because it could enable traffic monitoring that is less intrusive yet effective in complex urban environments.
+
 ### **1.2 State of the Art & Its Limitations**  
 How is this problem addressed today?  
 What gaps or limitations exist?  
