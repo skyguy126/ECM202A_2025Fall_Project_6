@@ -601,7 +601,9 @@ The singular edge event ghost error we saw could be combated by algorithmically 
 
 Our initial assumption was that all cameras would share a similar noise baseline but we found out that some cameras (9 and 19) experienced a noise floor nearly doubled to other cameras, causing standard thresholds to trigger false positives constantly. In an attempt to capture less events we made the settings stricter but that caused the algorithm to detect no events. With more time we could solve this issue by obtaining more data and find an average settings for these cameras rather than custom tuning, or if figuring out where this huge noise might be coming from. Our data currently focuses on bitrate, but future iterations could incorporate things like packet size variance or arrival time to distinguish signal patterns and improve the model. 
 
-Future development with the tracking fusion algorithm should involve adding additional cost and rules to the cost function that is currently just `mahalanobis_distance` function. Adding environmental constraints to the grid and simulating the CARLA environment would also enable path-feasibility rules, ensuring that a detection event would only be valid if the vehicle could have realistically moved to that location from the last state. 
+Future development with the tracking fusion algorithm could involve adding additional cost and rules to the cost function that is currently just `mahalanobis_distance` function. Adding environmental constraints to the grid and simulating the CARLA environment would also enable path-feasibility rules, ensuring that a detection event would only be valid if the vehicle could have realistically moved to that location from the last state. 
+
+Overall, this project confirms that combining encrypted Wi-Fi traffic with sparse video can yield reliable cross-zone vehicle tracking, provided the reconstruction algorithm is capable of enforcing global consistency. With stronger environmental modeling and richer signal features, this fusion framework could scale into a practical, city-wide blind-zone tracking system.
 
 ---
 
