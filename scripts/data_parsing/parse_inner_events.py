@@ -5,19 +5,22 @@ import os
 import sys
 import json
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 from pathlib import Path
 import argparse
 from scipy.signal import medfilt
 
+# --- GLOBAL CONFIGURATION ---
 FPS = 20  
 
+# --- DEFAULT SETTINGS ---
 STD_MIN_DURATION_S = 2.0    # Events shorter than this are treated as noise/glitches
 GAP_TOLERANCE_S = 1.0       # How long to wait for signal to return before ending an event
 IGNORE_START_S = 10.0       # Ignore the beginning 10 seconds
 MIN_BYTES_FLOOR = 100       # Minimum byte count to consider a signal 
 
+# --- CAMERA SPECIFIC OVERRIDES ---
 CAMERA_OVERRIDES = {
+    # CASE A: High Noise (Cam 18)
     "18": {
         "TRIGGER_BUFFER": 0.6,   # Multiplier for Std Dev to set trigger threshold
         "MIN_DURATION_S": 5.0,   # Longer duration
@@ -26,7 +29,7 @@ CAMERA_OVERRIDES = {
         "CLIP_SIGMA": 2.5        # Outlier rejection strictness
     },
     
-    # CASE B: 
+    # CASE B: Cam 19
     "19": {
         "TRIGGER_BUFFER": 2.0,   
         "MIN_DURATION_S": 4.0,   
@@ -35,6 +38,7 @@ CAMERA_OVERRIDES = {
         "CLIP_SIGMA": 3.0        
     },
 
+    # CASE C: Cam 20
     "20": {
         "TRIGGER_BUFFER": 1.0,   
         "MIN_DURATION_S": 4.0,   
@@ -43,7 +47,7 @@ CAMERA_OVERRIDES = {
         "CLIP_SIGMA": 2.0        
     },
 
-    # Fails for all, might remove
+    # CASE D: Cam 9
     "9": {
         "TRIGGER_BUFFER": 1.8,   
         "MIN_DURATION_S": 4.0,   
@@ -120,7 +124,7 @@ def analyze_motion(raw_sizes, use_high_sensitivity=False, override_config=None):
     3. Iterates through signal to find events.
     """
     if len(raw_sizes) == 0:
-        return [], [], raw_sizes, raw_sizes, [], [], 0, 0, 0
+        return [], 0, 0 
 
     # Median Filter to remove single-frame spikes (glitches)
     clean_signal = medfilt(raw_sizes, kernel_size=5)
@@ -154,8 +158,7 @@ def analyze_motion(raw_sizes, use_high_sensitivity=False, override_config=None):
     FORCE_WINDOW = settings["FORCE_WINDOW"]
     MIN_DURATION_S = settings["MIN_DURATION_S"]
 
-    #  Determine Smoothing Window
-    #  Analyze the first few seconds (ignoring start) to check signal volatility 
+    # Determine Smoothing Window
     start_idx = int(IGNORE_START_S * FPS)
     calib_slice = clean_signal[start_idx:] if len(clean_signal) > start_idx else clean_signal
     
@@ -165,7 +168,6 @@ def analyze_motion(raw_sizes, use_high_sensitivity=False, override_config=None):
         smooth_window = FORCE_WINDOW
     else:
         # Coefficient of Variation determines how messy the signal is.
-        # High CV -> Needs more smoothing (Window=40). Low CV -> Less smoothing.
         cv = noise_std / (noise_mean + 1e-5) 
         if cv > 0.5: smooth_window = 40 
         elif cv > 0.2: smooth_window = 20 
@@ -185,13 +187,8 @@ def analyze_motion(raw_sizes, use_high_sensitivity=False, override_config=None):
     thresh_low = s_mean + (thresh_high - s_mean) * SUSTAIN_RATIO
     thresh_low = max(thresh_low, MIN_BYTES_FLOOR)
 
-    # Store thresholds for plotting later
-    high_thresholds = [thresh_high] * len(smoothed)
-    low_thresholds = [thresh_low] * len(smoothed)
-
-    # vent Detection Loop
+    # Event Detection Loop
     valid_events = []
-    rejected_events = [] 
     
     is_active = False
     start_frame = 0
@@ -204,7 +201,7 @@ def analyze_motion(raw_sizes, use_high_sensitivity=False, override_config=None):
         if i < start_idx: continue
 
         if not is_active:
-            # TSignal exceeds High Threshold
+            # Signal exceeds High Threshold
             if val > thresh_high:
                 is_active = True
                 start_frame = i
@@ -230,8 +227,6 @@ def analyze_motion(raw_sizes, use_high_sensitivity=False, override_config=None):
                     # Must be longer than minimum duration
                     if duration_frames >= min_frames and is_valid_quality:
                         valid_events.append((start_frame, end_frame))
-                    else:
-                        rejected_events.append((start_frame, end_frame, duration_frames/FPS))
                     
                     is_active = False
                     gap_counter = 0
@@ -248,78 +243,34 @@ def analyze_motion(raw_sizes, use_high_sensitivity=False, override_config=None):
         if duration_frames >= min_frames and is_valid_quality:
              valid_events.append((start_frame, end_frame))
                 
-    return valid_events, rejected_events, clean_signal, smoothed, np.array(high_thresholds), np.array(low_thresholds), smooth_window, noise_mean, noise_std
+    return valid_events, noise_mean, noise_std
 
-def save_events(events, rejected, clean_signal, smoothed, thresh_high, thresh_low, raw_sizes, out_dir, camera_id, window_used, mode_label):
-
+def save_events_to_json(events, out_dir, camera_id):
+    """
+    Saves detected events to JSON only.
+    """
     events_file = f"camera_{camera_id}_events.json"
     events_dir = Path(os.path.join(out_dir, "events"))
     events_dir.mkdir(parents=True, exist_ok=True)
     events_path = Path(os.path.join(events_dir, events_file))
 
-    plot_file = f"camera_{camera_id}_plot.png"
-    plot_dir = Path(os.path.join(out_dir, "plots"))
-    plot_dir.mkdir(parents=True, exist_ok=True)
-    plot_path = os.path.join(plot_dir, plot_file)
-
-    print("\n" + "="*50)
-    print(f"CAMERA {camera_id}: {len(events)} EVENTS DETECTED")
-    print(f"Mode: {mode_label} | Smoothing Window: {window_used}")
-    print("="*50)
-    print(f"{'#':<5} {'START (s)':<12} {'END (s)':<12} {'DURATION':<10}")
-    print("-" * 50)
-
     event_list = []
     for i, (start, end) in enumerate(events):
-        s_time = (start / FPS) + 1.0 # +1.0 offset, depends on sync but haven't messed with it
+        s_time = (start / FPS) + 1.0 # +1.0 offset
         e_time = (end / FPS) + 1.0
         dur = e_time - s_time
         
-        start_fmt = f"{s_time:.2f}"
-        if s_time > 60:
-            m = int(s_time // 60)
-            s = s_time % 60
-            start_fmt += f" ({m}:{s:04.1f})"
-            
-        print(f"{i+1:<5} {start_fmt:<12} {e_time:<12.2f} {dur:<10.2f}s")
-        event_list.append({"event": i+1, "start_s": s_time, "end_s": e_time, "duration": dur})
-
-    print("="*50)
+        event_list.append({
+            "event": i+1, 
+            "start": round(s_time, 2), 
+            "end": round(e_time, 2), 
+            "duration": round(dur, 2)
+        })
 
     with open(events_path, "w") as f:
         json.dump(event_list, f, indent=2)
-    plt.figure(figsize=(12, 8))
     
-    plt.subplot(2, 1, 1)
-    plt.plot(raw_sizes, color='lightgray', label='Raw Frame Sizes')
-    plt.title(f"Camera {camera_id} - Raw Data")
-    
-    plt.subplot(2, 1, 2)
-    plt.plot(clean_signal, color='lightblue', alpha=0.5, label='Filtered')
-    plt.plot(smoothed, color='darkblue', linewidth=2, label=f'Smoothed (W={window_used})')
-    
-    if len(thresh_high) == len(smoothed):
-        color = 'magenta' if "SENSITIVITY" in mode_label or "OVERRIDE" in mode_label else 'red'
-        plt.plot(thresh_high, color=color, linestyle='--', label='Trigger Threshold')
-        plt.plot(thresh_low, color='orange', linestyle=':', label='Sustain Threshold')
-
-    # Highlight Detected Events in Green
-    for (start, end) in events:
-        plt.axvspan(start, end, color='green', alpha=0.3, label='Event')
-    
-    # Highlight Rejected Events in Red 
-    if "STANDARD" in mode_label:
-        for (start, end, _) in rejected:
-            plt.axvspan(start, end, color='red', alpha=0.1) 
-
-    handles, labels = plt.gca().get_legend_handles_labels()
-    by_label = dict(zip(labels, handles))
-    plt.legend(by_label.values(), by_label.keys())
-    
-    plt.title(f"Cam {camera_id} Analysis | {mode_label}")
-    plt.tight_layout()
-    plt.savefig(plot_path)
-    plt.close()
+    print(f"Camera {camera_id}: Saved {len(events)} events to {events_path}")
 
 def main():
     parser = argparse.ArgumentParser()
@@ -336,44 +287,36 @@ def main():
         except: cam_id = f.stem
         
         raw_sizes = pcap_to_frame_sizes(str(f))
+        
         if cam_id in CAMERA_OVERRIDES:
-            print(f"\nDEBUG: Camera {cam_id} found in OVERRIDES. Applying custom tuning.")
+            print(f"Processing Camera {cam_id} (Override Mode)...")
             config = CAMERA_OVERRIDES[cam_id]
-            events, rejected, clean, smoothed, high, low, win, _, _ = analyze_motion(
-                raw_sizes, override_config=config
-            )
-            mode_used = f"OVERRIDE ({cam_id})"
+            events, _, _ = analyze_motion(raw_sizes, override_config=config)
             
         else:
-            events, rejected, clean, smoothed, high, low, win, n_mean, n_std = analyze_motion(raw_sizes, use_high_sensitivity=False)
-            mode_used = "STANDARD"
+            print(f"Processing Camera {cam_id} (Standard Mode)...")
+            events, n_mean, n_std = analyze_motion(raw_sizes, use_high_sensitivity=False)
             
             should_use_high_sens = False
             
             # No events found -> Try High Sensitivity
             if len(events) == 0:
                 should_use_high_sens = True
-                print(f"DEBUG: Camera {cam_id} | 0 events found. Trying High Sensitivity.")
                 
             # High Noise Floor -> Try High Sensitivity
-            # If background noise > 2000 bytes, standard thresholds might be too high
             elif n_mean > 2000 and n_std > 500:
                 should_use_high_sens = True
-                print(f"DEBUG: Camera {cam_id} | High Noise Detected (Mean:{n_mean:.0f}, Std:{n_std:.0f}). Forcing High Sensitivity.")
 
             if should_use_high_sens:
-                events_r, rejected_r, clean_r, smoothed_r, high_r, low_r, win_r, _, _ = analyze_motion(raw_sizes, use_high_sensitivity=True)
+                events_r, _, _ = analyze_motion(raw_sizes, use_high_sensitivity=True)
                 
                 # Only keep high sensitivity results if it actually found something
                 if len(events_r) > 0:
-                    events, rejected, clean, smoothed, high, low, win = events_r, rejected_r, clean_r, smoothed_r, high_r, low_r, win_r
-                    mode_used = "HIGH SENSITIVITY"
+                    events = events_r
                 elif len(events) == 0:
                      pass
-                else:
-                     print(f"DEBUG: High Sensitivity yielded 0 events vs Standard's {len(events)}. Keeping Standard.")
 
-        save_events(events, rejected, clean, smoothed, high, low, raw_sizes, out_dir, cam_id, win, mode_used)
+        save_events_to_json(events, out_dir, cam_id)
 
 if __name__ == "__main__":
     main()
