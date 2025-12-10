@@ -384,17 +384,17 @@ For our data fusion step, we decided against using a machine-learning approach d
 
 # **4. Evaluation & Results**
 
-Present experimental results with clarity and professionalism.
+## Test Scenarios
 
-Include:
+We evalate our system across five scenarios: 
 
-- Plots (accuracy, latency, energy, error curves)  
-- Tables (comparisons with baselines)  
-- Qualitative visualizations (spectrograms, heatmaps, bounding boxes, screenshots)  
-- Ablation studies  
-- Error analysis / failure cases
-
-Each figure should have a caption and a short interpretation.
+| **Demo Case**| **Description**| **Purpose**|
+|------------------------|-----|-------------------------------|
+| `one_car_2`| A single car moves straight across from camera 5 to camera 4, exiting at a different edge camera.| - Tests straight trajectory across cameras.<br>- Simple case of exiting at a different edge camera.|
+| `one_car_6`| A single car exits at the same edge camera but completes a loop inside the town.| - Tests looping within the town.<br>- Returns to the same edge camera.|
+| `two_cars_6_cyan_5_black`| Two cars share some similar path components but in succession.| - Tests successive, partially overlapping paths for different cars.<br>- Demonstrates lack of direct interaction.|
+| `two_cars_6_green_8_black`| Two cars enter at similar times from opposite edges, travel spatially far apart routes, meet briefly, and exit the way they entered. | - Tests overlap in timing but spatial diversity.<br>- Demonstrates brief points of proximity and independent exiting routes.|
+| `three_cars_1_cyan_6_purple_8_white`| Builds on `two_cars_6green_8black` with a third car taking a longer route and exiting on the opposite side.| - Adds complexity with a third car.<br>- Highlights longer and independent paths.|
 
 ### Inner Camera Event Data
 As discussed before, our algorithms depend heavily upon the quality of the data provided to them. Below are our results in inner event data accuracy: 
@@ -421,19 +421,10 @@ As discussed before, our algorithms depend heavily upon the quality of the data 
 ### Edge Camera Event Data
 Edge camera data was highly reliable, with the only error being a single ghost event in the three car scenario incorrectly indicating that car 3 exited from camera 4 after it had already exited at camera 5. 
 
-We evalate our system across five scenarios: 
+## Test Results
+We now present a discussion of each demo scenario, its significance, and failures.
 
-| **Demo Case**| **Description**| **Purpose**|
-|------------------------|-----|-------------------------------|
-| `one_car_2`| A single car moves straight across from camera 5 to camera 4, exiting at a different edge camera.| - Tests straight trajectory across cameras.<br>- Simple case of exiting at a different edge camera.|
-| `one_car_6`| A single car exits at the same edge camera but completes a loop inside the town.| - Tests looping within the town.<br>- Returns to the same edge camera.|
-| `two_cars_6_cyan_5_black`| Two cars share some similar path components but in succession.| - Tests successive, partially overlapping paths for different cars.<br>- Demonstrates lack of direct interaction.|
-| `two_cars_6_green_8_black`| Two cars enter at similar times from opposite edges, travel spatially far apart routes, meet briefly, and exit the way they entered. | - Tests overlap in timing but spatial diversity.<br>- Demonstrates brief points of proximity and independent exiting routes.|
-| `three_cars_1_cyan_6_purple_8_white`| Builds on `two_cars_6green_8black` with a third car taking a longer route and exiting on the opposite side.| - Adds complexity with a third car.<br>- Highlights longer and independent paths.|
-
-We present a discussion of each demo scenario, its significance, and discuss our findings.
-
-## Demo 1: One Car, Simple Route
+### Demo 1: One Car, Simple Route
 <div style="display: flex; justify-content: space-between; gap: 10px;">
     <figure style="text-align: center; margin: 0;">
     <img src="./assets/img/one_car_2_KF.png" alt="one_car_2_KF" style="width: 100%; height: auto;">
@@ -447,7 +438,7 @@ We present a discussion of each demo scenario, its significance, and discuss our
 
 In this simple scenario, both approaches successfully detect all events in order, with no missing events, no added events, and no misclassified events. In the Kalman Filter approach, the car's trajectory overshoots, but is corrected back to the event location with a correct classification. This scenario is mostly a sanity check of our system, since with only one car in the area, identification of anonymous events is trivial. This scenario also shows global ID event tracking, as the car is not re-assigned a new identy upon exiting at the opposite edge camera. 
 
-## Demo 2: One Car, Moderate Route
+### Demo 2: One Car, Moderate Route
 <div style="display: flex; justify-content: space-between; gap: 10px;">
     <figure style="text-align: center; margin: 0;">
     <img src="./assets/img/one_car_6_KF.png" alt="one_car_2_KF" style="width: 100%; height: auto;">
@@ -461,7 +452,7 @@ In this simple scenario, both approaches successfully detect all events in order
 
 This scenario varies from the first in that the car exits from the same edge camera that it entered from. In addition, the route becomes slightly more complex, introducing turns and crossing the same camera (camera 1) at two different times.  
 
-## Demo 3: Two Cars, Spatially Sparse
+### Demo 3: Two Cars, Spatially Sparse
 <div style="display: flex; justify-content: space-between; gap: 10px;">
     <figure style="text-align: center; margin: 0;">
     <img src="./assets/img/two_cars_6_green_8_black_KF.png" alt="one_car_2_KF" style="width: 100%; height: auto;">
@@ -477,7 +468,7 @@ This scenario varies from the first in that the car exits from the same edge cam
 
 This scenario introduces a second car. Both cars enter the town within a few seconds of each other from different edge cameras, and traverse paths inside the town. They near the center of the map at similar times, providing a test of spatial ambiguity. 
 
-## Demo 4: Two Cars, Temporally Sparse
+### Demo 4: Two Cars, Temporally Sparse
 <div style="display: flex; justify-content: space-between; gap: 10px;">
     <figure style="text-align: center; margin: 0;">
     <img src="./assets/img/two_cars_6_cyan_5_black_KF.png" alt="one_car_2_KF" style="width: 100%; height: auto;">
@@ -493,7 +484,7 @@ This scenario introduces a second car. Both cars enter the town within a few sec
 
 This scenario demonstrates the dependence of our algorithms on event data quality. [TODO: AMY]
 
-## Demo 5: Three Cars
+### Demo 5: Three Cars
 <div style="display: flex; justify-content: space-between; gap: 10px;">
     <figure style="text-align: center; margin: 0;">
     <img src="./assets/img/three_cars_1_cyan_6_purple_8_white_KF.png" alt="one_car_2_KF" style="width: 100%; height: auto;">
