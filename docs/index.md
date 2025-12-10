@@ -92,8 +92,6 @@ In summary, while we draw on ideas from related work in multi-camera tracking, s
 
 # **3. Technical Approach**
 
-TODO: NEED MORE FIGURES!!!
-
 ### **3.1 Assumptions & Proposed Solutions**
 
 Throughout this project, we make the following assumptions:
@@ -160,7 +158,11 @@ Refer to the [setup instructions provied here](https://github.com/skyguy126/ECM2
 
 We run two prerecorded edge videos (cameras 4 and 5) frame-by-frame. Each frame goes through YOLOv8x for detection plus ByteTrack for short-term tracking, which yields a box and a per-camera track id for each vehicle. We crop the box and pass it to an OSNet ReID network to get a 512-D appearance embedding; OSNet is used because it is lightweight and pretrained for person/vehicle re-identification, so it works well without heavy fine-tuning. The bottom-center of each box is projected into world coordinates using calibrated intrinsics/extrinsics so both cameras report positions in the same frame. A global appearance tracker keeps a cross-camera gallery: cosine similarity (threshold 0.65) links new embeddings to existing global IDs, otherwise it spawns a new one. To smooth noise, gallery embeddings are updated with a running average (80% previous, 20% new). We log per-frame JSON with camera pose, global/local IDs, and estimated world positions; this compact log is later used by the fusion step without needing to replay video. Key design choices for non-experts: YOLO+ByteTrack gives robust boxes and stable short tracks; appearance-only matching (no timing/GPS) avoids needing synchronization; the similarity threshold trades off false merges vs. splits; the running average keeps IDs stable even if a single frame is noisy.
 
+![camera_layout](./assets/img/edge_camera.png)
+
 #### **Inner-Camera:** Side Channel PCAP Feature Extraction
+
+![camera_layout](./assets/img/inner_camera.png)
 
 ##### Deterministic Approach
 
@@ -651,31 +653,6 @@ As a next step beyond the Kalman and graph-based fusion, we propose a multimodal
 * **FFmpeg** – Video encoding (H.264) and frame capture
 * **Docker** – Container environment for reproducible CARLA deployment
 
----
+### Dataset
 
-> [!NOTE] 
-> Read and then delete the material from this line onwards.
-
-# 🧭 **Guidelines for a Strong Project Website**
-
-- Include multiple clear, labeled figures in every major section.  
-- Keep the writing accessible; explain acronyms and algorithms.  
-- Use structured subsections for clarity.  
-- Link to code or datasets whenever possible.  
-- Ensure reproducibility by describing parameters, versions, and preprocessing.  
-- Maintain visual consistency across the site.
-
----
-
-# 📊 **Minimum vs. Excellent Rubric**
-
-| **Component**        | **Minimum (B/C-level)**                                         | **Excellent (A-level)**                                                                 |
-|----------------------|---------------------------------------------------------------|------------------------------------------------------------------------------------------|
-| **Introduction**     | Vague motivation; little structure                             | Clear motivation; structured subsections; strong narrative                                |
-| **Related Work**     | 1–2 citations; shallow summary                                 | 5–12 citations; synthesized comparison; clear gap identification                          |
-| **Technical Approach** | Text-only; unclear pipeline                                  | Architecture diagram, visuals, pseudocode, design rationale                               |
-| **Evaluation**       | Small or unclear results; few figures                          | Multiple well-labeled plots, baselines, ablations, and analysis                           |
-| **Discussion**       | Repeats results; little insight                                | Insightful synthesis; limitations; future directions                                      |
-| **Figures**          | Few or low-quality visuals                                     | High-quality diagrams, plots, qualitative examples, consistent style                      |
-| **Website Presentation** | Minimal formatting; rough writing                           | Clean layout, good formatting, polished writing, hyperlinks, readable organization        |
-| **Reproducibility**  | Missing dataset/software details                               | Clear dataset description, preprocessing, parameters, software environment, instructions   |
+The dataset used by this report is provided both in the GitHub repository under the `./demo` folder and is also found in this [Google Drive Folder](https://drive.google.com/drive/folders/1oTbn916mhMHAnpmTxS0zZHUtnz8hwg2i?usp=drive_link). To generate these datasets, please refer to `./README.md` in the GitHub repository.
