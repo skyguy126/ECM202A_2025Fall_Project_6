@@ -417,9 +417,15 @@ Our event error rates are as follows:
 | **TOTAL** | **63** | **59** | **4** | **5** |
 
 ### Performance Metrics
-* **Precision:** **92.19%** *(59/64)* – We are 92.19% confident that a car is actually present when an event is detected.
-* **Recall:** **93.65%** *(59/63)* – The system successfully captures 93.65% of all actual vehicle traffic.
-* **F1 Score:** **92.91%** – The system demonstrates 92.91% overall reliability, balancing sensitivity and trustworthiness.
+
+* **Precision:** $P = \frac{TP}{TP + FP} = \frac{59}{59 + 5} = 92.19\%$
+  * *We are **92.19%** confident that a car is actually present when an event is detected.*
+
+* **Recall:** $R = \frac{TP}{TP + FN} = \frac{59}{59 + 4} = 93.65\%$
+  * *The system successfully captures **93.7%** of all actual vehicle traffic.*
+
+* **F1 Score:** $F1 = 2 \times \frac{P \times R}{P + R} = 92.91\%$
+  * *The system demonstrates **92.91%** overall reliability.*
 
 We present a discussion of each demo scenario, its significance, and discuss our findings.
 
