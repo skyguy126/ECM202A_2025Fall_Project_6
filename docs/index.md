@@ -187,7 +187,7 @@ To associate inner camera events to existing vehicle tracks, we use a softmax-we
 
 Track management is handled through the edge-camera IDs. When an edge camera detects a car ID that does not exist in the current state, a new Kalman filter instance is initialized at that location. Then, to prevent premature track deletion due to sensor noise near the boundaries, we implement a robust exit logic. A track is only deleted if the vehicle is at the extreme north or south limits within the lane width and has been active for a minimum duration of 10 frames. This ensures reliable termination of tracks without sacrificing continuity.
 
-*The high-level pseudocode is thus:*
+*Kalman Filter Algorithm pseudocode:*
 
 ```
 # sorted by timestamp
@@ -421,8 +421,7 @@ We now present a discussion of each demo scenario, its significance, and failure
 ### Demo 1: One Car, Simple Route
 
 <p float="left" align="middle">
-  <img src="./assets/img/one_car_2_KF.png" width="49%" />
-  <img src="./assets/img/one_car_2_graph.png" width="49%" /> 
+  <img src="./assets/img/one_car_2.png" width="99%" />
 </p>
 <p align="center">
   <em>Kalman Filter (Left) vs. Graph Optimization (Right)</em>
@@ -440,8 +439,7 @@ In this simple scenario, both approaches successfully detect all events in order
 ### Demo 2: One Car, Moderate Route
 
 <p float="left" align="middle">
-  <img src="./assets/img/one_car_6_KF.png" width="49%" />
-  <img src="./assets/img/one_car_6_graph.png" width="49%" /> 
+  <img src="./assets/img/one_car_6.png" width="99%" />
 </p>
 <p align="center">
   <em>Kalman Filter (Left) vs. Graph Optimization (Right)</em>
