@@ -422,20 +422,13 @@ Due to the asynchronous nature of the ground truth data, which recorded valid ve
 We now present a discussion of each demo scenario, its significance, and failures.
 
 ### Demo 1: One Car, Simple Route
-<table>
-  <tr>
-    <td align="center">
-      <img src="./assets/img/one_car_2_KF.png" width="100%" alt="Kalman Filter">
-    </td>
-    <td align="center">
-      <img src="./assets/img/one_car_2_graph.png" width="100%" alt="Graph Optimization">
-    </td>
-  </tr>
-  <tr>
-    <td align="center"><strong>Kalman Filter</strong></td>
-    <td align="center"><strong>Graph Optimization</strong></td>
-  </tr>
-</table>
+<p float="left" align="middle">
+  <img src="./assets/img/one_car_2_KF.png" width="49%" />
+  <img src="./assets/img/one_car_2_graph.png" width="49%" /> 
+</p>
+<p align="center">
+  <em>Kalman Filter (Left) vs. Graph Optimization (Right)</em>
+</p>
 
 | Car ID | Metric | Kalman (Real-time) | Graph (Batch) |
 | :--- | :--- | :--- | :--- |
