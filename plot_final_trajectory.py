@@ -95,6 +95,8 @@ def finalize_subplots(fig, scatters, demo_name, demo_path, graph_algorithm=False
         ax.set_xlabel('Y Position')
         ax.set_ylabel('X Position')
         ax.legend(fontsize=8)
+        ax.set_xlim(-250, 250)  # add whitespace if needed
+        ax.set_ylim(-300, 300)  # add whitespace if needed
         ax.grid(True, alpha=0.3)
         ax.set_aspect('equal')
 
@@ -133,23 +135,15 @@ def main():
     # Get unique car IDs and create subplots
     car_ids = sorted(df['car_id'].unique())
     num_cars = len(car_ids)
-    
-    # Create subplots in a grid layout
+
     cols = num_cars
     rows = (num_cars + cols - 1) // cols
-    fig, axes = plt.subplots(rows, cols, figsize=(7 * cols, 5 * rows))
-    
-    # Flatten axes array for easier iteration
-    if num_cars == 1:
-        if rows == 1 and cols == 1:
-            axes = [axes]
-        else:
-            axes = axes.flatten()
-    elif rows == 1:
-        axes = list(axes)
-    else:
-        axes = axes.flatten()
-    
+
+    fig, axes = plt.subplots(rows, cols, figsize=(7 * cols, 5 * rows), squeeze=False)
+
+    # flatten to a 1D list
+    axes = axes.ravel()
+        
     scatters = []
     
     # Plot each car in its own subplot

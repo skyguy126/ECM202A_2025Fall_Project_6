@@ -1,11 +1,11 @@
-# assume these are sorted by timestamp
+# sorted by timestamp
 edge_cam_data = [[frame_num, location, car id], [frame_num, location, car id]...]
 inner_cam_data = [[frame_num, location], [frame_num, location]...]
 
 class Car_KF:
     car_id
 
-    # add velocity to KF but only really output position
+    # factor velocity into KF but only really output position
 
     known_position
     known_confidence
@@ -74,8 +74,4 @@ identify_event(event_location):
     for car in CURR_STATE: 
         cost[car_id] = mahalanobis_distance(car, event_location)
     
-    return Car_KF with lowest cost # hungarian algorithm step, but only one event so it's just min of a vector
-
-
-
-        
+    return Car_KF with lowest cost # hungarian algorithm step, equivalent to min of vector
