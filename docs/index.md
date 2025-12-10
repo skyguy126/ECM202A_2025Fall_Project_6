@@ -204,7 +204,7 @@ We run two prerecorded edge videos (cameras 4 and 5) frame-by-frame. Each frame 
 
 ##### Deterministic Approach
 
-WIP Amy
+We implement a deterministic signal processing pipeline to detect vehicle presence solely from the encrypted bitrate patterns of the inner cameras. Raw 802.11 data packets are first aggregated into 20 Hz discrete-time signals representing bytes-per-frame. A median filter (kernel size 5) is applied to this raw signal to suppress periodic high-bandwidth keyframes (I-frames) and transient transmission spikes that do not correspond to physical motion. To normalize performance across heterogeneous camera hardware, we employ an iterative statistical calibration routine. This algorithm recursively clips signal outliers (3 standard deviations in this case) to isolate and calculate the true "noise floor" (mean and variance) of the camera stream. Detection is performed using dual-threshold hysteresis: a "Trigger" high threshold (mean + 2*sigma) to initiate the event (prevent random noise from starting a detection) and a "Sustain" low threshold to maintain the active state during minor bitrate dips. This prevents a single vehicle event from fracturing into multiple detection fragments. By analyzing the Signal-to-Noise Ratio and variance of the initial pass, the model identifies specific cameras with high noise floors or weak signals. We adjusted the average smoothing window and trigger thresholds for these specific streams.
 
 ##### Machine Learning Approach
 
@@ -218,9 +218,13 @@ Overlapping windows of 16 frames are generated with stride 1 to retain fine temp
 
 #### Final Fusion Algorithm
 
-WIP Amy
+To integrate data from the edge cameras with the anonymous location data from the inner cameras, we designed a tracking algorithm using a Kalman filter and softmax-based data association. We modeled the vehicle state as a four-dimensional vector representing position and velocity in the 2D plane, assuming a constant velocity motion model. As sensing differ between the two types of cameras, we assigned separate measurement noise covariance matrices. The edge cameras provide ground-truth localization so they are assigned a low noise variance, whereas the inner cameras are subject to more noise and estimation errors and are assigned a higher variance. This ensures the filter trusts the edge data significantly more while still allowing the inner data to smooth the trajectory and update velocity estimates throughout the blind zone.
 
-The final fusion algorithm utilizes a Kalman Filter for each car to track its current position over time. At each step in time (frame), events triggered at this frame are processed and the current world belief about the position of each car is updated. If there is an inner or edge event pertaining to a certain car, that car's KF filter is updated with the new information; else, it simply accumulates upon its internal belief. The high-level pseudocode is thus: 
+To associate inner camera events to existing vehicle tracks, we use a softmax-weighted Mahalanobis Distance. For each incoming inner camera event, we compute the distance between the event location and each active track’s predicted state, normalized by the track’s positional uncertainty.  These costs are converted into association probabilities using the softmax function and the event is assigned to the track with the highest probability, provided it exceeds a confidence threshold of 0.2. 
+
+Track management is handled through the edge-camera IDs. When an edge camera detects a car ID that does not exist in the current state, a new Kalman filter instance is initialized at that location. Then, to prevent premature track deletion due to sensor noise near the boundaries, we implement a robust exit logic. A track is only deleted if the vehicle is at the extreme north or south limits within the lane width and has been active for a minimum duration of 10 frames. This ensures reliable termination of tracks without sacrificing continuity.
+
+The high-level pseudocode is thus: 
 
 ```
 # sorted by timestamp
@@ -302,7 +306,7 @@ identify_event(event_location):
     return Car_KF with lowest cost # hungarian algorithm step, equivalent to min of vector
 ```
 
-Note that for the sake of extracting interesting information from the inner event data, identification of each inner anonymous event is treated as ground truth with respect to updating car locations (AMY: is this true?). 
+Note that for the sake of extracting interesting information from the inner event data, identification of each inner anonymous event is treated as ground truth with respect to updating car locations.
 
 In implementation, the location of each event is abstracted in the event data as a `camera_id`, then mapped to coordinates that represent the camera's location. We did attempt world projection at the edge cameras, but realized that this information is not needed, as the point of an edge event is to identify an entry point and report the ground truth about a car's identity. The small difference between using the camera's position and the car's real position on the road is minimal compared to the much larger camera spacing. In other words, there is no ambiguity about For the inner cameras, 
 
