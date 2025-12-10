@@ -1,14 +1,41 @@
-# M202A-CARLA
+# Urban Traﬃc Inference with Perimeter Vision & Encrypted-Camera Side-Channel Extraction
 
-## Basic Setup on Lab Computer
+### Authors
 
-⚠️ Assumes that the Docker image exists already. 
+- **Amy Lee** (siuyuetlee@ucla.edu, [GitHub](https://github.com/Harukk246))
+- **Katherine Sohn** (katherinesohn@ucla.edu, [GitHub](https://github.com/katherinesohn)) 
+- **Vamsi Eyunni** (veyunni@ucla.edu, [GitHub](https://github.com/skyguy126))
 
-1. Create / start the development container (assumes image exists already):
+### [Project Website and Writeup](https://skyguy126.github.io/ECM202A_2025Fall_Project_6/)
+
+---
+
+## Software Setup
+
+### Dependencies
+
+The following dependencies are prerequsite to running any software for this project though the specific setup instructions are out of scope of this guide. Please refer to the below URLs for the most up-to-date setup guides from the respective project owners. As setup directions vary widely between different machines we recommend referring to the original dependency guides.
+
+- Operating System: `Ubuntu 22.04.5 LTS`
+- CUDA GPU with latest drivers. (i.e. `Driver Version: 550.107.02, CUDA Version: 12.4`)
+- Python `3.7.17` running on the host machine. (Note: we suggest using [pyenv](https://github.com/pyenv/pyenv))
+- [pylot](https://github.com/erdos-project/pylot)
+    - This README assumes a functional deployment of the pylot docker image with full X11 forwarding and GPU passthrough to the host machine. Common caveats include pulling the `carla` Python library from the container's version of the [CARLA simulator](https://carla.org/) and installing it on the host. You may attempt to use `scritps/dev/create_dev_cont.sh` and `scripts/dev/run_cont.sh` but machine specific setup steps will vary.
+- [Mininet Wi-Fi](https://mininet-wifi.github.io/)
+
+### Start the CARLA Simulator
+
+1. Create or connect to the `pylot` container:
 
 ```bash
+# if you need to create a new container and make persistent changes within
 ./create_dev_cont.sh autocommit
+
+# or if the container is already setup
+./run_cont.sh
 ```
+
+2. Start CARLA inside the docker container `./scripts/run_simulator.sh`
 
 # WARNING
 Do not run the above command (in step 1) on Vamsi's desktop. Instead use `./run_cont.sh`.
