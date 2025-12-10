@@ -415,9 +415,11 @@ Our event error rates are as follows:
 | **THREE CARS** | 24 | 23 | 1 | 1 |
 | **TWO CAR 68** | 13 | 12 | 1 | 3 |
 | **TOTAL** | **63** | **59** | **4** | **5** |
-Precision: 59 / (59 + 5) = 92.19% -> We are 92.19% confident that a car is actually at an event.
-Recall: 59 / (59 + 4) = 93.65% -> The system successfully captures 93.7% of all vehicle traffic. 
-F1 Score: 2 * (Precision * Recall)/(Precision + Recall) = 92.91% -> The system demonstrates 92.91% overall reliability.
+
+### Performance Metrics
+* **Precision:** **92.19%** *(59/64)* – We are 92.19% confident that a car is actually present when an event is detected.
+* **Recall:** **93.65%** *(59/63)* – The system successfully captures 93.65% of all actual vehicle traffic.
+* **F1 Score:** **92.91%** – The system demonstrates 92.91% overall reliability, balancing sensitivity and trustworthiness.
 
 We present a discussion of each demo scenario, its significance, and discuss our findings.
 
