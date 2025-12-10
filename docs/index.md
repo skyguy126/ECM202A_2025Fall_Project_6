@@ -407,17 +407,14 @@ We evalate our system across five scenarios:
 | `three_cars_1_cyan_6_purple_8_white`| Builds on `two_cars_6green_8black` with a third car taking a longer route and exiting on the opposite side.| - Adds complexity with a third car.<br>- Highlights longer and independent paths.|
 
 Our event error rates are as follows: 
-================================================================================
-SCENARIO             | TRUTH    | TRUE POSITIVES | FALSE NEGATIVES | FALSE POSITIVES
-================================================================================
-Two Cars 65          | 14       | 14       | 0        | 0
-ONE CAR 6            | 8        | 6        | 2        | 1
-One car 2            | 4        | 4        | 0        | 0
-THREE CARS           | 24       | 23       | 1        | 1
-TWO CAR 68           | 13       | 12       | 1        | 3
---------------------------------------------------------------------------------
-TOTAL                | 63       | 59       | 4        | 5
-================================================================================
+| Scenario | Ground Truth | True Positives (Matches) | False Negatives (Missing) | False Positives (Ghosts) |
+| :--- | :---: | :---: | :---: | :---: |
+| **Two Cars 65** | 14 | 14 | 0 | 0 |
+| **ONE CAR 6** | 8 | 6 | 2 | 1 |
+| **One Car 2** | 4 | 4 | 0 | 0 |
+| **THREE CARS** | 24 | 23 | 1 | 1 |
+| **TWO CAR 68** | 13 | 12 | 1 | 3 |
+| **TOTAL** | **63** | **59** | **4** | **5** |
 Precision: 59 / (59 + 5) = 92.19% -> We are 92.19% confident that a car is actually at an event.
 Recall: 59 / (59 + 4) = 93.65% -> The system successfully captures 93.7% of all vehicle traffic. 
 F1 Score: 2 * (Precision * Recall)/(Precision + Recall) = 92.91% -> The system demonstrates 92.91% overall reliability.
