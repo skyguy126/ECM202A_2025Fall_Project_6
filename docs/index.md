@@ -411,7 +411,8 @@ We evalate our system across five scenarios:
 | `three_cars_1_cyan_6_purple_8_white`| Builds on `two_cars_6green_8black` with a third car taking a longer route and exiting on the opposite side.| - Adds complexity with a third car.<br>- Highlights longer and independent paths.|
 
 ### Inner Camera Event Data
-As discussed before, our algorithms depend heavily upon the quality of the data provided to them. Below are our results in inner event data accuracy: 
+As discussed before, our algorithms depend heavily upon the quality of the data provided to them. Below are our results in inner event data accuracy:
+
 | **Scenario**| **Ground Truth**| **True Positives (Matches)**| **False Negatives (Missing)**| **False Positives (Ghosts)**|
 |------------------------|------------------------|------------------------|------------------------|------------------------|
 | `one_car_2` | 4 | 4 | 0 | 1 |
@@ -444,6 +445,7 @@ Due to the asynchronous nature of the ground truth data, which recorded valid ve
 We now present a discussion of each demo scenario, its significance, and failures.
 
 ### Demo 1: One Car, Simple Route
+
 <p float="left" align="middle">
   <img src="./assets/img/one_car_2_KF.png" width="49%" />
   <img src="./assets/img/one_car_2_graph.png" width="49%" /> 
@@ -489,6 +491,7 @@ In this simple scenario, both approaches successfully detect all events in order
 This scenario varies from the first in that the car exits from the same edge camera that it entered from. In addition, the route becomes slightly more complex, introducing turns and crossing the same camera (camera 1) at two different times. The Kalman Filter struggled with this maneuver; its prediction model drifted linearly, resulting in a Max Drift of 23.56m . The Graph Optimization leverages future constraints to interpolate turns, cutting the error percentage by more than half (0.62% vs 1.38%) and keeping the maximum drift within single digits.
 
 ### Demo 3: Two Cars, Spatially Sparse
+
 <div style="display: flex; justify-content: space-between; gap: 10px;">
     <figure style="text-align: center; margin: 0;">
     <img src="./assets/img/two_cars_6_green_8_black_KF.png" alt="one_car_2_KF" style="width: 100%; height: auto;">
@@ -520,6 +523,7 @@ This scenario varies from the first in that the car exits from the same edge cam
 This scenario introduces a second car. Both cars enter the town within a few seconds of each other from different edge cameras, and traverse paths inside the town. They near the center of the map at similar times, providing a test of spatial ambiguity. Due to error in the inner camera event where camera 9 miscalculatead 3 additional events, both algorithms predicted an event at the wrong location, resulting in the high Max Drift. However, the Graph Optimization method was able to recover the trajectory using global consistency, maintaining a 5.17% error rate despite the difficult conditions. This demonstrates the method's superior ability to recover from noisy data.
 
 ### Demo 4: Two Cars, Temporally Sparse
+
 <div style="display: flex; justify-content: space-between; gap: 10px;">
     <figure style="text-align: center; margin: 0;">
     <img src="./assets/img/two_cars_6_cyan_5_black_KF.png" alt="one_car_2_KF" style="width: 100%; height: auto;">
