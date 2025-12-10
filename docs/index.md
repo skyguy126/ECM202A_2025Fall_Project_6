@@ -38,12 +38,9 @@ Modern cities face a tension between traffic monitoring needs and privacy concer
 
 # **1. Introduction**
 
-Use the introduction to clearly set context, describe motivation, and explain the central idea behind your project.
-
 Urban environments increasingly rely on camera networks for traffic management, safety, and city planning. Yet cities face a fundamental tension: comprehensive visual surveillance enables effective situational awareness but raises serious privacy concerns, while privacy-preserving approaches often sacrifice visibility and utility. This project explores a middle ground by asking: Can we maintain awareness of vehicles moving through an urban zone using only perimeter cameras and indirect signals from interior private feeds?
 
-### **1.1 Motivation & Objective**  
-What are you trying to do and why is it important? Explain in accessible, non-jargon terms.
+### **1.1 Motivation & Objective**
 
 Urban mobility applications (e.g. congestion control, emergency response) require knowing how many vehicles are in a given area, where they are, and how long they dwell. Today’s cities often rely on fixed cameras or sensor networks, but full coverage is impractical and raises privacy issues. For instance, automated license plate reader (ALPR) systems can log vehicles entering or exiting a town, but cannot monitor movements once inside and pose serious privacy concerns (Automated License Plate Readers, n.d.). Our objective is to maintain real-time awareness of vehicles in a city zone without blanket surveillance. We propose to achieve this by fusing perimeter camera vision with encrypted-camera side-channel data. Encrypted video streams, such as those from private interior cameras, inadvertently leak information through their bitrate patterns, which correlate with scene motion (Apthorpe et al., 2017). By monitoring these side-channel signals, we can infer when and where vehicle motion occurs inside the zone, then combine that with multi-vantage perimeter detections to track vehicles continuously. This approach is important because it could enable traffic monitoring that is less intrusive yet effective in complex urban environments.
 
@@ -95,17 +92,7 @@ In summary, while we draw on ideas from related work in multi-camera tracking, s
 
 # **3. Technical Approach**
 
-Describe your system, methodology, algorithms, and design choices.  
-Use figures generously:
-
-- System architecture diagram  
-- Data pipeline  
-- Algorithm/model block diagram  
-- Hardware setup photos  
-
-💡 Tip: Add images, diagrams, and code snippets. Make your system reproducible.
-
-Recommended subsections:
+TODO: NEED MORE FIGURES!!!
 
 ### **3.1 Assumptions & Proposed Solutions**
 
@@ -160,6 +147,10 @@ Camera-to-access-point links are emulated in software with [Mininet-WiFi](https:
 Over-the-air traffic is captured via a monitor-mode interface and recorded per video as PCAPs; this mirrors methodology in traffic-analysis and side-channel studies where timing, burstiness, and packet sizes—not payloads—are the primary signals. Transmissions are replayed at source frame rate using application-layer streaming so temporal characteristics match the encoded video. Each capture is closed after a clip to ensure one-to-one alignment between videos and PCAPs, improving downstream feature extraction reliability.
 
 Mininet-WiFi is chosen because it offers repeatable experiments, real kernel code paths, and scriptable control at low cost, as documented in the SDN and wireless emulation literature (e.g., Mininet-WiFi design and evaluation papers). It also enables rapid iteration compared with physical testbeds while providing more realism than packet-level simulators.
+
+#### Reproducibility
+
+Refer to the [setup instructions provied here](https://github.com/skyguy126/ECM202A_2025Fall_Project_6/blob/main/README.md).
 
 ### **3.4 Algorithm / Model Details**
 
