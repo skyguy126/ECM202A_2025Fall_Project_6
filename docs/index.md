@@ -453,8 +453,6 @@ We now present a discussion of each demo scenario, its significance, and failure
 <p align="center">
   <em>Kalman Filter (Left) vs. Graph Optimization (Right)</em>
 </p>
-
-<div align="center">
     
 | Car ID | Metric | Kalman | Graph |
 | :--- | :--- | :--- | :--- |
@@ -462,8 +460,6 @@ We now present a discussion of each demo scenario, its significance, and failure
 | | **RMSE (Accuracy)** | 8.62 m | 10.20 m |
 | | **Error %** | **1.19%** | **1.41%** |
 | | **Max Drift** | 18.30 m | 18.30 m |
-
-</div>
 
 In this simple scenario, both approaches successfully detect all events in order, with no missing events, no added events, and no misclassified events. The quantitative metrics show comparable performance with error rates hovering near 1% of the total path length (1.19% for Kalman vs. 1.41% for Graph). This scenario is mostly a sanity check of our system, since with only one car in the area, identification of anonymous events is trivial. This scenario also shows global ID event tracking, as the car is not re-assigned a new identy upon exiting at the opposite edge camera. However, this test confirms that for simple, linear paths with sparse traffic, the Kalman Filter provides sufficient precision without the computational cost of the Graph optimization.
 
@@ -476,8 +472,6 @@ In this simple scenario, both approaches successfully detect all events in order
 <p align="center">
   <em>Kalman Filter (Left) vs. Graph Optimization (Right)</em>
 </p>
-
-<div align="center">
     
 | Car ID | Metric | Kalman | Graph |
 | :--- | :--- | :--- | :--- |
@@ -485,8 +479,6 @@ In this simple scenario, both approaches successfully detect all events in order
 | | **RMSE (Accuracy)** | 9.83 m | 4.41 m |
 | | **Error %** | **1.38%** | **0.62%** |
 | | **Max Drift** | 23.56 m | 6.92 m |
-
-</div>
 
 This scenario varies from the first in that the car exits from the same edge camera that it entered from. In addition, the route becomes slightly more complex, introducing turns and crossing the same camera (camera 1) at two different times. The Kalman Filter struggled with this maneuver; its prediction model drifted linearly, resulting in a Max Drift of 23.56m . The Graph Optimization leverages future constraints to interpolate turns, cutting the error percentage by more than half (0.62% vs 1.38%) and keeping the maximum drift within single digits.
 
@@ -504,8 +496,6 @@ This scenario varies from the first in that the car exits from the same edge cam
     <figcaption>Graph Optimization</figcaption>
   </figure>
 </div>
-
-<div align="center">
     
 | Car ID | Metric | Kalman | Graph |
 | :--- | :--- | :--- | :--- |
@@ -517,8 +507,6 @@ This scenario varies from the first in that the car exits from the same edge cam
 | | **RMSE** | 193.55 m | 36.89 m |
 | | **Error %** | **27.10%** | **5.17%** |
 | | **Max Drift** | 460.57 m | 103.59 m |
-
-</div>
 
 This scenario introduces a second car. Both cars enter the town within a few seconds of each other from different edge cameras, and traverse paths inside the town. They near the center of the map at similar times, providing a test of spatial ambiguity. Due to error in the inner camera event where camera 9 miscalculatead 3 additional events, both algorithms predicted an event at the wrong location, resulting in the high Max Drift. However, the Graph Optimization method was able to recover the trajectory using global consistency, maintaining a 5.17% error rate despite the difficult conditions. This demonstrates the method's superior ability to recover from noisy data.
 
@@ -536,8 +524,6 @@ This scenario introduces a second car. Both cars enter the town within a few sec
     <figcaption>Graph Optimization</figcaption>
   </figure>
 </div>
-
-<div align="center">
     
 | Car ID | Metric | Kalman | Graph |
 | :--- | :--- | :--- | :--- |
@@ -549,8 +535,6 @@ This scenario introduces a second car. Both cars enter the town within a few sec
 | | **RMSE** | 4.69 m | 4.68 m |
 | | **Error %** | **0.56%** | **0.55%** |
 | | **Max Drift** | 6.92 m | 6.91 m |
-
-</div>
 
 This scenario demonstrates the dependence of our algorithms on event data quality. In this scenario, we were able to obtain accurate inner camera events. As a result, both algorithms achieved minimal error rates, confirming that when data quality is high, the Kalman Filter can be just as effective as Graph Optimization.
 
@@ -567,8 +551,6 @@ This scenario demonstrates the dependence of our algorithms on event data qualit
     <figcaption>Graph Optimization</figcaption>
   </figure>
 </div>
-
-<div align="center">
     
 | Car ID | Metric | Kalman | Graph |
 | :--- | :--- | :--- | :--- |
@@ -584,8 +566,6 @@ This scenario demonstrates the dependence of our algorithms on event data qualit
 | | **RMSE** | 4.83 m | 4.37 m |
 | | **Error %** | **0.22%** | **0.20%** |
 | | **Max Drift** | 7.49 m | 7.50 m |
-
-</div>
         
 The three-car scenario contained our only error in edge camera data, where one car incorrectly had three edge events, with a second, later exit being recorded at camera 4 after its correct exit at camera 5. Both algorithms incorrectly selected this faulty exit. This resulted in the high maximum drift we see. However, like Demo 2, the Graph Optimization was able to recover the correct trajectory and maintain a low error despite the conditions. 
 
