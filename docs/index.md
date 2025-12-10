@@ -100,15 +100,7 @@ Implementing the proposed system presents several challenges.
 ### **1.6 Metrics of Success**  
 What are the specific, measurable criteria for evaluating your project?
 
-We evaluate our system on several specific criteria.
-
-- Tracking Accuracy: We compare the system’s estimated vehicle trajectories and counts against ground-truth data from the CARLA simulator. Metrics include the count error (difference between actual number of vehicles in the zone and our estimate over time) and track continuity metrics from multi-object tracking literature (e.g. identity switches, false positives/negatives). A successful outcome would be high accuracy in maintaining the correct count of vehicles and correctly keeping identities from entry to exit. For example, we might use the Multi-Object Tracking Accuracy (MOTA) or **(TODO: what is this??)** ID F1-score to quantify this. Dwell Time 
-- Error: We measure how accurately we estimate each vehicle’s dwell time inside the zone (time between entry and exit). The goal is to be within a small margin (e.g. within a few seconds of ground truth).
-- Localization Coarseness: Although we do not attempt fine-grained positioning for interior vehicles, we evaluate whether the system’s coarse position estimates (based on nearest camera region) are correct. For instance, if the side-channel indicates activity at a particular interior camera, do we correctly attribute it to a vehicle near that camera?
-- Latency: We assess the delay between a real event (vehicle enters, moves, exits) and the system’s detection or update of that event. The system should operate in real-time or near-real-time. We log the time it takes for a WiFi motion spike to be processed and integrated into the tracker, and for an edge detection to create or update a track. Ideally, this latency is low enough for practical use (on the order of one frame, e.g. <0.1s in simulation).
-- Resource Usage: We monitor computational load and network overhead. A key metric is whether the fusion algorithm runs faster than real-time on our hardware (if it cannot keep up with the 20 FPS camera rate, that’s a failure). We also note network bandwidth used by our side-channel monitoring (the Wireshark/pcap data capture) to ensure it’s minimal. 
-
-Success is defined by meeting target thresholds in these metrics – for example, maintaining >90% tracking accuracy, <1 vehicle count error most of the time, identification fidelity across cameras, and real-time performance.
+Our success criteria is event error count. A non-successful event includes a false positive, false negative, or a mis-classified event (an event that was triggered by a different car than it was attributed to). Because of time constraints, this metric is evaluated heuristically, but could be automatically calculated from ground truth with further processing of ground truth data. 
 
 ---
 
@@ -214,9 +206,20 @@ Packet traces are converted into per-frame descriptors by isolating 802.11 data 
 
 Overlapping windows of 16 frames are generated with stride 1 to retain fine temporal structure while expanding the effective dataset. An 80/20 split yields train/test partitions. A two-layer bidirectional LSTM (hidden size 128, dropout 0.1) maps each window to per-timestep predictions, optimized with mean squared error and Adam (learning rate 3e-4) for 75 epochs. This bi-directional, windowed formulation mirrors standard sequence-to-sequence regression setups, enabling the model to leverage both past and future context within each clip.
 
+# TODO: events 
+
+
 **Results**
 
 #### Final Fusion Algorithm
+
+We compare two data fusion algorithms that perform inference upon the final lists of edge and inner events. 
+
+The first approach utilizes Kalman Filters to track each car's expected position, and uses the Hungarian Algorithm (minimum cost) to identify each inner event with a car ID. It uses only information from past and present events to create the belief state at the current point in time.  
+
+The second approach constructs a graph where each node represents a time, position, and node identifier. Edges are constructed between nodes, where plausible edges are kept and infeasible ones are thrown away. Finally, a Mixed Integer Programming (MIP) solver computes the solution with the lowest overall cost, outputting that as the most likely view of history. In contrast to the first algorithm, this one requires all information from the scenario in order to perform inference. 
+
+#### Kalman Filter + Hungarian Algorithm Approach
 
 To integrate data from the edge cameras with the anonymous location data from the inner cameras, we designed a tracking algorithm using a Kalman filter and softmax-based data association. We modeled the vehicle state as a four-dimensional vector representing position and velocity in the 2D plane, assuming a constant velocity motion model. As sensing differ between the two types of cameras, we assigned separate measurement noise covariance matrices. The edge cameras provide ground-truth localization so they are assigned a low noise variance, whereas the inner cameras are subject to more noise and estimation errors and are assigned a higher variance. This ensures the filter trusts the edge data significantly more while still allowing the inner data to smooth the trajectory and update velocity estimates throughout the blind zone.
 
@@ -310,15 +313,18 @@ Note that for the sake of extracting interesting information from the inner even
 
 In implementation, the location of each event is abstracted in the event data as a `camera_id`, then mapped to coordinates that represent the camera's location. We did attempt world projection at the edge cameras, but realized that this information is not needed, as the point of an edge event is to identify an entry point and report the ground truth about a car's identity. The small difference between using the camera's position and the car's real position on the road is minimal compared to the much larger camera spacing. In other words, there is no ambiguity about For the inner cameras, 
 
-This approach relies heavily upon the quality of the input event sequences, and effectively assumes: 
+This approach relies heavily upon the quality of the input event sequences, such as desiring that: 
 1. Events are correctly sorted by time
 2. Events are unique (no duplicate reports of the same car/camera/time encounter)
 3. Edge camera `car_id`'s are correctly assigned
 4. `camera_id`'s that reported each event are accurate
 
-
 ### **3.4 Hardware / Software Implementation**
 Explain equipment, libraries, or frameworks.
+
+Vamsi - CARLA, ffmpeg (only the part we used), mininet
+Amy - Pandas? just what part you used
+Katherine - ortools
 
 ### **3.5 Key Design Decisions & Rationale**
 Describe the main design decisions you made.
