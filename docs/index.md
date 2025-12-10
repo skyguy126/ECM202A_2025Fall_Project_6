@@ -113,7 +113,7 @@ Throughout this project, we make the following assumptions:
 ### **3.2 System Architecture**
 ![System Pipeline](./assets/img/system_pipeline.png)
 
-The system architecture is organized into three major subsystems: edge-camera perception, inner-camera wireless side-channel sensing, and a central fusion/inference module. Edge cameras handle visual detection, tracking, and global ID assignment, while inner cameras contribute anonymized event streams derived from encrypted Wi-Fi traffic. A final inference layer—implemented either with a Kalman+Hungarian tracker or a global graph-based optimizer. The final layer integrates these heterogeneous event sources into coherent vehicle position inferences.
+The system architecture is organized into three major subsystems: edge-camera perception, inner-camera wireless side-channel sensing, and a central fusion/inference module. Edge cameras handle visual detection, tracking, and global ID assignment, while inner cameras contribute anonymized event streams derived from encrypted Wi-Fi traffic. Events are processed by a final inference loop, which is implemented either with a Kalman+Hungarian tracker as shown or a Graph Optimization Problem approach. The final layer integrates these heterogeneous event sources into coherent vehicle position inferences.
 
 ### **3.3 Data Pipeline**
 
@@ -279,7 +279,7 @@ This approach relies heavily upon the quality of the input event sequences, such
 3. Edge camera `car_id`'s are correctly assigned
 4. `camera_id`'s that reported each event are accurate
 
-#### Global Graph-based Optimization Approach
+#### Global Graph-Based Optimization Approach
 
 In this approach, we solve tracking by formulating a global graph-based Mixed Integer Program (MIP). To robustly associate observed car trajectories with inner sensor events, we employ a global optimization framework rooted in graph theory. Rather than relying on local or greedy assignments, our method builds a global graph where all plausible assignments—consistent with physical and temporal constraints—are considered simultaneously. This approach allows us to jointly determine the most likely set of car paths, as well as to detect and label sensor events that cannot be explained by any car as noise.
 
@@ -320,17 +320,17 @@ In this approach, we solve tracking by formulating a global graph-based Mixed In
 In summary, our system implements two distinct algorithms for associating inner sensor events with vehicle identities:
 
 1. A Kalman Filter with Hungarian algorithm for per-event greedy matching. 
-1. A global graph-based MIP approach for jointly optimal trajectory assignment.
+1. A global Graph Optimization approach for jointly optimal trajectory assignment.
 
 **The Kalman + Hungarian algorithm** is computationally efficient and intuitive, updating each vehicle's belief state frame by frame and making assignment decisions based on predicted positions. We expect it to perform well in straightforward, low-density settings, but it may struggle with ambiguous or noisy events that would benefit from considering global context.
 
-**The global graph-based MIP approach** considers all possible associations and constraints simultaneously, optimizing for the globally most consistent set of trajectories and noise rejections. This should make it more robust to ambiguous or missing detections, at the cost of higher computational complexity.
+**The global Graph Optimization approach** considers all possible associations and constraints simultaneously, optimizing for the globally most consistent set of trajectories and noise rejections. This should make it more robust to ambiguous or missing detections, at the cost of higher computational complexity.
 
 Between the two, the **Kalman + Hungarian algorithm approach is much more strongly dependent on the quality of event data**. Because it makes decisions based only on the current filter state and immediate event observations, degraded event quality (such as dropped, noisy, or out-of-order events) can rapidly undermine tracking accuracy. The MIP approach, conversely, is able to use global context to compensate for some level of poor or missing data, making it more robust to event imperfections.
 
 Finally, there is a key distinction in *inference timing*:  
 - The Kalman+Hungarian algorithm can operate truly in real time, updating tracks and making assignments continuously as events arrive.
-- The global graph-based method, in contrast, requires collecting a block or window of data before executing its joint optimization, thus always “looking back” over a period rather than making truly immediate decisions.
+- The global Graph Optimization approach, in contrast, requires collecting a block or window of data before executing its joint optimization, thus always "looking back" over a period rather than making truly immediate decisions.
 This tradeoff—between immediate, local inference and delayed, globally optimal assignment—will be an important factor in practical system design.
 
 ### **3.5 Hardware / Software Implementation**
@@ -435,7 +435,7 @@ We now present a discussion of each demo scenario, its significance, and failure
 | | **Error %** | **1.19%** | **1.41%** |
 | | **Max Drift** | 18.30 m | 18.30 m |
 
-In this simple scenario, both approaches successfully detect all events in order, with no missing events, no added events, and no misclassified events. The quantitative metrics show comparable performance with error rates hovering near 1% of the total path length (1.19% for Kalman vs. 1.41% for Graph). This scenario is mostly a sanity check of our system, since with only one car in the area, identification of anonymous events is trivial. This scenario also shows global ID event tracking, as the car is not re-assigned a new identy upon exiting at the opposite edge camera. However, this test confirms that for simple, linear paths with sparse traffic, the Kalman Filter provides sufficient precision without the computational cost of the Graph optimization.
+In this simple scenario, both approaches successfully detect all events in order, with no missing events, no added events, and no misclassified events. The quantitative metrics show comparable performance with error rates hovering near 1% of the total path length (1.19% for Kalman vs. 1.41% for Graph). This scenario is mostly a sanity check of our system, since with only one car in the area, identification of anonymous events is trivial. This scenario also shows global ID event tracking, as the car is not re-assigned a new identy upon exiting at the opposite edge camera. However, this test confirms that for simple, linear paths with sparse traffic, the Kalman Filter provides sufficient precision without the computational cost of the Graph Optimization.
 
 ### Demo 2: One Car, Moderate Route
 
@@ -543,7 +543,7 @@ This scenario demonstrates the dependence of our algorithms on event data qualit
         
 The three-car scenario contained our only error in edge camera data, where one car incorrectly had three edge events, with a second, later exit being recorded at camera 4 after its correct exit at camera 5. Both algorithms incorrectly selected this faulty exit. This resulted in the high maximum drift we see. However, like Demo 2, the Graph Optimization was able to recover the correct trajectory and maintain a low error despite the conditions. 
 
-The close encounter between cars 1 and 3 when they pass through the same intersection and proceed in opposite ways proved to be challenging for both algorithms to solve. The Kalman filter incorrectly assigned 
+The close encounter between cars 1 and 3 when they pass through the same intersection and proceed in opposite ways proved to be challenging for both algorithms to solve. The Kalman filter incorrectly assigned a ghost event at camera 8 belonging to car 1 to car 3, and the Graph Optimization incorrectly assigns the event at camera 3 to car 1 instead of car 3. For the Kalman Filter approach, the mistake might have been mitigated if the missing event at camera 12 was correctly present, modifying the trajectory from camera 10 and picking up the camera 9 event instead of car 3. For the Graph Optimization approach, inserting more knowledge of the road structure, such as including the information that car 1 could not have passed by camera 3 immediately after camera 10 (it must first pass through camera 9 or 7) could deterministically fix the misclassification. 
 
 ---
 # **5. Discussion**
