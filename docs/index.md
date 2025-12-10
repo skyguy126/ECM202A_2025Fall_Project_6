@@ -200,24 +200,17 @@ We implement a deterministic signal processing pipeline to detect vehicle presen
 
 ##### Machine Learning Approach
 
-**Methodology**
-
 Packet traces are converted into per-frame descriptors by isolating 802.11 data traffic after the first high-volume video packet and aggregating over the camera frame period (1/FPS). Each frame records packet count, total bytes, mean and variance of packet sizes, inter-arrival statistics, and index bounds; empty frames are zero-filled to preserve alignment. Paired video-derived features are matched by camera identifier, truncated to equal length, and standardized after discarding the first 500 frames to suppress startup transients—steps consistent with traffic-analysis practice. Three packet-side channels (count, total bytes, size variability) serve as predictors, while video embeddings supply supervision.
 
 Overlapping windows of 16 frames are generated with stride 1 to retain fine temporal structure while expanding the effective dataset. An 80/20 split yields train/test partitions. A two-layer bidirectional LSTM (hidden size 128, dropout 0.1) maps each window to per-timestep predictions, optimized with mean squared error and Adam (learning rate 3e-4) for 75 epochs. This bi-directional, windowed formulation mirrors standard sequence-to-sequence regression setups, enabling the model to leverage both past and future context within each clip.
 
-# TODO: events 
+#### Event Parsing
 
-
-**Results**
+Events are parsed on a per-camera basis using the methods described above, then synthesized into two final lists `all_edge_events.json` and `all_inner_events.json` that are sorted by time. These represent all the scenario data that will be provided to the final algorithm(s).
 
 #### Final Fusion Algorithm
 
-We compare two data fusion algorithms that perform inference upon the final lists of edge and inner events. 
-
-The first approach utilizes Kalman Filters to track each car's expected position, and uses the Hungarian Algorithm (minimum cost) to identify each inner event with a car ID. It uses only information from past and present events to create the belief state at the current point in time.  
-
-The second approach constructs a graph where each node represents a time, position, and node identifier. Edges are constructed between nodes, where plausible edges are kept and infeasible ones are thrown away. Finally, a Mixed Integer Programming (MIP) solver computes the solution with the lowest overall cost, outputting that as the most likely view of history. In contrast to the first algorithm, this one requires all information from the scenario in order to perform inference. 
+We compare two approaches that perform inference upon the final lists of edge and inner events. 
 
 #### Kalman Filter + Hungarian Algorithm Approach
 
@@ -319,6 +312,58 @@ This approach relies heavily upon the quality of the input event sequences, such
 3. Edge camera `car_id`'s are correctly assigned
 4. `camera_id`'s that reported each event are accurate
 
+#### Global Graph-based Optimization Approach
+
+In this approach, we solve tracking by formulating a global graph-based Mixed Integer Program (MIP). To robustly associate observed car trajectories with inner sensor events, we employ a global optimization framework rooted in graph theory. Rather than relying on local or greedy assignments, our method builds a global graph where all plausible assignments—consistent with physical and temporal constraints—are considered simultaneously. This approach allows us to jointly determine the most likely set of car paths, as well as to detect and label sensor events that cannot be explained by any car as noise.
+
+- **Graph Structure:**  
+  Nodes represent inner sensor events (with time, position), each car's start (entry) and end (exit) events. Directed edges connect nodes if travel between them is physically plausible (speed, forward in time).
+
+- **Edge Costs:**  
+  Each edge's cost combines deviation from the target speed and travel distance.
+
+- **Decision Variables:**  
+    $$x_{uv}^c =
+    \begin{cases}
+    1 & \text{if car } c \text{ traverses edge } u \rightarrow v, \\
+    0 & \text{otherwise.}
+    \end{cases}
+    $$
+
+    $$y_i =
+    \begin{cases}
+    1 & \text{if inner event } i \text{ is classified as noise,} \\
+    0 & \text{otherwise.}
+    \end{cases}
+    $$
+
+- **Objective:**  
+  Minimize the total edge traversal costs and penalize any inner events classified as noise.
+
+- **Constraints:**  
+  - Each inner event is either assigned to one car’s path or marked as noise.
+  - For each car, its path forms a valid trip from entry to exit (flow conservation).
+  - All movement is within physical constraints (e.g., speed limit).
+
+- **Assignment:**  
+  After solving, an inner event is assigned a car ID if it lies on that car’s optimal path; unassigned events are labeled noise.
+
+#### Comparison of Approaches
+In summary, our system implements two distinct algorithms for associating inner sensor events with vehicle identities:  
+- (1) a Kalman Filter with Hungarian algorithm for per-event greedy matching, and  
+- (2) a global graph-based MIP approach for jointly optimal trajectory assignment.
+
+**The Kalman+Hungarian algorithm** is computationally efficient and intuitive, updating each vehicle's belief state frame by frame and making assignment decisions based on predicted positions. We expect it to perform well in straightforward, low-density settings, but it may struggle with ambiguous or noisy events that would benefit from considering global context.
+
+**The global graph-based MIP approach** considers all possible associations and constraints simultaneously, optimizing for the globally most consistent set of trajectories and noise rejections. This should make it more robust to ambiguous or missing detections, at the cost of higher computational complexity.
+
+Between the two, the **Kalman+Hungarian approach is much more strongly dependent on the quality of event data**. Because it makes decisions based only on the current filter state and immediate event observations, degraded event quality (such as dropped, noisy, or out-of-order events) can rapidly undermine tracking accuracy. The MIP approach, conversely, is able to use global context to compensate for some level of poor or missing data, making it more robust to event imperfections.
+
+Finally, there is a key distinction in **inference timing**:  
+- The Kalman+Hungarian algorithm can operate truly in real time, updating tracks and making assignments continuously as events arrive.
+- The global graph-based method, in contrast, requires collecting a block or window of data before executing its joint optimization, thus always “looking back” over a period rather than making truly immediate decisions.
+This tradeoff—between immediate, local inference and delayed, globally optimal assignment—will be an important factor in practical system design.
+
 ### **3.4 Hardware / Software Implementation**
 Explain equipment, libraries, or frameworks.
 
@@ -331,7 +376,7 @@ Describe the main design decisions you made.
 
 We chose CARLA's preset town 5 because of its inherent structure as a perimeter and inner areas, with two specific entry points at the east and west sides of of the town. This constrains our environment nicely, while still providing multiple entry points to confirm that global tracking works. The inner structure is mostly grid-like, lending itself to easy spacing of cameras with non-overlapping fields of view. 
 
-For our data fusion step, we decided against using a machine-learning approach due to lack of ML experience amongst team members. 
+For our data fusion step, we decided against using a machine-learning approach due to lack of ML experience amongst team members. Both algorithmic approaches were suggested by our mentors, then researched and implemented. For the Kalman Filter approach, emphasis was on learning how to approach a data fusion problem and get some meaningful results. For the graph optimization approach, emphasis was more on proving that such a solution was appropriate for this type of problem formulation. 
 
 ---
 
@@ -364,7 +409,7 @@ This should synthesize—not merely repeat—your results.
 
 For future development regarding the tracking fusion algorithm, we could add additional cost and rules to the cost function that is currently just `mahalanobis_distance` function. Adding environmental constraints to the grid and simulating the CARLA environment would also enable path-feasibility rules, ensuring that a detection event would only be valid if the vehicle could have realistically moved to that location from the last state. 
 
-Our initial assumption was that all cameras would share a similar noise baseline but we found out that some cameras (9 and 19) experienced a noise floor nearly doubled to other cameras, causing standard thresholds to trigger false positives constantly. In an attempt to capture less events we made the settings stricter but that caused the algorithm to detect no events. With more time we could solve this issue by obtaining  more data and find an average settings for these cameras rather than custom tuning, or if figuring out where this huge noise might be coming from. We are also focusing on bitrate right now, but future iterations could incorporate things like packet size variance or arrival time to distinguish signal patterns.
+Our initial assumption was that all cameras would share a similar noise baseline but we found out that some cameras (9 and 19) experienced a noise floor nearly doubled to other cameras, causing standard thresholds to trigger false positives constantly. In an attempt to capture less events we made the settings stricter but that caused the algorithm to detect no events. With more time we could solve this issue by obtaining more data and find an average settings for these cameras rather than custom tuning, or if figuring out where this huge noise might be coming from. We are also focusing on bitrate right now, but future iterations could incorporate things like packet size variance or arrival time to distinguish signal patterns.
 
 ---
 
