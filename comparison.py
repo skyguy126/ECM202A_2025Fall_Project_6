@@ -213,8 +213,7 @@ def process_scenario(scenario_path):
 
 def main():
     parser = argparse.ArgumentParser()
-    default_demos = r"C:\Users\fasts\Downloads\ECM202A_2025Fall_Project_6\demos"
-    parser.add_argument("demos_path", nargs='?', default=default_demos)
+    parser.add_argument("demos_path", nargs='?', default="demos")
     args = parser.parse_args()
     root_path = Path(args.demos_path)
 

@@ -86,16 +86,57 @@ At this point this guide will assume you have a set of MP4 files with recordings
 
 ### Build Dataset
 
-TODO: Katherine to explain how to combine `.json` files edge camera processing and `.pcap` files from mininet.
+Once you have generated edge camera event data (`.json` files) and inner camera network data (`.pcap` files), combine them into a consolidated dataset:
+
+1. Ensure you have the following files prepared:
+   - Edge camera `.json` files in `<scenario>/edge_data/events/`
+   - Inner camera `.pcap` files processed and their event `.json` files in `<scenario>/inner_data/events/`
+
+2. Synthesize all events into final consolidate event files. Choose one of the following approaches:
+   
+   **Option A: Manual synthesis**
+   - Run the final synthesis script: `python ./scripts/data_parsing/get_final_events.py <scenario_folder>`
+   - Replace `<scenario_folder>` with the path to your scenario directory (e.g., `./demos/one_car_2/`)
+   - This script will:
+     - Parse all edge camera event `.json` files and synthesize them into `all_edge_events.json`
+     - Parse all inner camera event `.json` files with camera position metadata and synthesize them into `all_inner_events.json`
+     - Output both consolidated files to the scenario root directory
+
+   **Option B: Automated workflow**
+   - Run the shell script: `./scripts/data_parsing/parse_scenario.sh <scenario_name>`
+   - This will automatically handle all parsing steps including edge events, inner events, and final synthesis
+
+3. The resulting `all_edge_events.json` and `all_inner_events.json` files located at the base level of the scenario folder `demos/<scenario_name>` can now be used for inference and analysis.
 
 ### Perform Inference
 
-TODO: Katherine / Amy
+With your consolidated event data ready, perform inference to reconstruct vehicle trajectories:
+
+1. Run the inference algorithm. Choose one of the following approaches:
+
+   **Option A: Kalman Filter Algorithm**
+   - Run: `python ./M202A_algorithm2.py <scenario_name>`
+   - Replace `<scenario_folder>` with your scenario name (e.g., `one_car_2`)
+   - This will output `final_trajectory.csv` in the scenario directory
+
+   **Option B: Graph Optimization Algorithm**
+   - Run: `python ./graph_algorithm.py <scenario_name>`
+   - Replace `<scenario_folder>` with your scenario name (e.g., `one_car_2`)
+   - This will output `graph_trajectory.csv` in the scenario directory
 
 ### Generate Visuals
 
-TODO: Katherine / Amy
+Visualize the results with the plot script:
+   - For KF algorithm results: `python ./plot_final_trajectory.py <scenario_name>`
+   - For GO algorithm results: `python ./plot_final_trajectory.py <scenario_name> -g`
+   - The `-g` flag indicates to plot the graph algorithm output
+   - Visualization plots will be saved to the scenario directory as or `trajectory_plot.png` or `graph_alg_plot.png`, respectively
 
+To re-run all base demos through both algorithms and plot all results, run the `./refresh_plots.sh` script. This script is currently ad-hoc and not parameterized, but can be easily refactored to re-run results for any demo algorithm. 
+
+### Run Error Analysis 
+
+Run error analysis for all scenarios in the specified folder (default `demos/`): `python ./comparison.py <folder>`
 ---
 
 ## Experimental Machine Learning Models
