@@ -376,7 +376,7 @@ Describe the main design decisions you made.
 
 We chose CARLA's preset town 5 because of its inherent structure as a perimeter and inner areas, with two specific entry points at the east and west sides of of the town. This constrains our environment nicely, while still providing multiple entry points to confirm that global tracking works. The inner structure is mostly grid-like, lending itself to easy spacing of cameras with non-overlapping fields of view. 
 
-For our data fusion step, we decided against using a machine-learning approach due to lack of ML experience amongst team members. Both algorithmic approaches were suggested by our mentors, then researched and implemented. For the Kalman Filter approach, emphasis was on learning how to approach a data fusion problem and get some meaningful results. For the graph optimization approach, emphasis was more on proving that such a solution was appropriate for this type of problem formulation. 
+For our data fusion step, we decided against using a machine-learning approach due to lack of ML experience amongst team members. Both algorithmic approaches were suggested by our mentors, then researched and implemented. Kalman Filters are a basic and well-studied model for object tracking, and have been considered and studied with surveillance tracking motivations in view [Gunjal et al.]. Similarly, tracking of interacting objects has been modeled as a network-flow Mixed Integer Program [Wang et al.]. 
 
 ---
 
@@ -393,6 +393,8 @@ Include:
 - Error analysis / failure cases
 
 Each figure should have a caption and a short interpretation.
+
+
 
 ---
 
@@ -432,6 +434,10 @@ X. Tian et al. (2021). “Robust Privacy-Preserving Motion Detection and Object 
 R. Shokri et al. (2019). “Visor: Privacy-Preserving Video Analytics as a Cloud Service.” Microsoft Research Tech. Report. 
 
 Electronic Frontier Foundation – Street-Level Surveillance Project. “Automated License Plate Readers.” (n.d.). 
+
+P. R. Gunjal, B. R. Gunjal, H. A. Shinde, S. M. Vanam and S. S. Aher, "Moving Object Tracking Using Kalman Filter," 2018 International Conference On Advances in Communication and Computing Technology (ICACCT), Sangamner, India, 2018, pp. 544-547, doi: 10.1109/ICACCT.2018.8529402.
+
+Wang, Xinchao & Turetken, Engin & Fleuret, Francois & Fua, Pascal. (2014). Tracking Interacting Objects Optimally Using Integer Programming. 17-32. 10.1007/978-3-319-10590-1_2. 
 
 ---
 
