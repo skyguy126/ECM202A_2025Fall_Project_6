@@ -396,21 +396,12 @@ Include:
 
 Each figure should have a caption and a short interpretation.
 
-We evalate our system across five scenarios: 
-
-| **Demo Case**| **Description**| **Purpose**|
-|------------------------|-----|-------------------------------|
-| `one_car_2`| A single car moves straight across from camera 5 to camera 4, exiting at a different edge camera.| - Tests straight trajectory across cameras.<br>- Simple case of exiting at a different edge camera.|
-| `one_car_6`| A single car exits at the same edge camera but completes a loop inside the town.| - Tests looping within the town.<br>- Returns to the same edge camera.|
-| `two_cars_6_cyan_5_black`| Two cars share some similar path components but in succession.| - Tests successive, partially overlapping paths for different cars.<br>- Demonstrates lack of direct interaction.|
-| `two_cars_6_green_8_black`| Two cars enter at similar times from opposite edges, travel spatially far apart routes, meet briefly, and exit the way they entered. | - Tests overlap in timing but spatial diversity.<br>- Demonstrates brief points of proximity and independent exiting routes.|
-| `three_cars_1_cyan_6_purple_8_white`| Builds on `two_cars_6green_8black` with a third car taking a longer route and exiting on the opposite side.| - Adds complexity with a third car.<br>- Highlights longer and independent paths.|
-
-Our event error rates are as follows: 
+### Inner Camera Event Data
+As discussed before, our algorithms depend heavily upon the quality of the data provided to them. Below are our results in inner event data accuracy: 
 | Scenario | Ground Truth | True Positives (Matches) | False Negatives (Missing) | False Positives (Ghosts) |
 | :--- | :---: | :---: | :---: | :---: |
 | `one_car_2` | 4 | 4 | 0 | 1 |
-| `one_car_6 | 8 | 6 | 2 | 1 |
+| `one_car_6` | 8 | 6 | 2 | 1 |
 | `two_cars_6_cyan_5_black` | 14 | 14 | 0 | 0 |
 | `two_cars_6_green_8_black`| 13 | 12 | 1 | 3 |
 | `three_cars_1_cyan_6_purple_8_white` | 24 | 23 | 1 | 1 |
@@ -426,6 +417,19 @@ Our event error rates are as follows:
 
 * **F1 Score:** $F1 = 2 \times \frac{P \times R}{P + R} = 92.19\%$
   * *The system demonstrates **92.19%** overall reliability.*
+
+### Edge Camera Event Data
+Edge camera data was highly reliable, with the only error being a single ghost event in the three car scenario incorrectly indicating that car 3 exited from camera 4 after it had already exited at camera 5. 
+
+We evalate our system across five scenarios: 
+
+| **Demo Case**| **Description**| **Purpose**|
+|------------------------|-----|-------------------------------|
+| `one_car_2`| A single car moves straight across from camera 5 to camera 4, exiting at a different edge camera.| - Tests straight trajectory across cameras.<br>- Simple case of exiting at a different edge camera.|
+| `one_car_6`| A single car exits at the same edge camera but completes a loop inside the town.| - Tests looping within the town.<br>- Returns to the same edge camera.|
+| `two_cars_6_cyan_5_black`| Two cars share some similar path components but in succession.| - Tests successive, partially overlapping paths for different cars.<br>- Demonstrates lack of direct interaction.|
+| `two_cars_6_green_8_black`| Two cars enter at similar times from opposite edges, travel spatially far apart routes, meet briefly, and exit the way they entered. | - Tests overlap in timing but spatial diversity.<br>- Demonstrates brief points of proximity and independent exiting routes.|
+| `three_cars_1_cyan_6_purple_8_white`| Builds on `two_cars_6green_8black` with a third car taking a longer route and exiting on the opposite side.| - Adds complexity with a third car.<br>- Highlights longer and independent paths.|
 
 We present a discussion of each demo scenario, its significance, and discuss our findings.
 
@@ -471,7 +475,39 @@ This scenario varies from the first in that the car exits from the same edge cam
   </figure>
 </div>
 
-This scenario introduces a second car. Both cars enter the town within a few seconds of each other from different edge cameras, and traverse paths inside the town. They near the center of the map at similar times, providing a test of spatial ambiguity. This ambiguity proves difficult for both algorithms to parse, as 6 events are misclassified by the Kalman Filter algorithm and 
+This scenario introduces a second car. Both cars enter the town within a few seconds of each other from different edge cameras, and traverse paths inside the town. They near the center of the map at similar times, providing a test of spatial ambiguity. 
+
+## Demo 4: Two Cars, Temporally Sparse
+<div style="display: flex; justify-content: space-between; gap: 10px;">
+    <figure style="text-align: center; margin: 0;">
+    <img src="./assets/img/two_cars_6_cyan_5_black_KF.png" alt="one_car_2_KF" style="width: 100%; height: auto;">
+    <figcaption>Kalman Filter</figcaption>
+</div>
+<div>
+  </figure>
+  <figure style="text-align: center; margin: 0;">
+    <img src="./assets/img/two_cars_6_cyan_5_black_graph.png" alt="one_car_2_graph" style="width: 100%; height: auto;">
+    <figcaption>Graph Optimization</figcaption>
+  </figure>
+</div>
+
+This scenario demonstrates the dependence of our algorithms on event data quality. [TODO: AMY]
+
+## Demo 5: Three Cars
+<div style="display: flex; justify-content: space-between; gap: 10px;">
+    <figure style="text-align: center; margin: 0;">
+    <img src="./assets/img/three_cars_1_cyan_6_purple_8_white_KF.png" alt="one_car_2_KF" style="width: 100%; height: auto;">
+    <figcaption>Kalman Filter</figcaption>
+</div>
+<div>
+  </figure>
+  <figure style="text-align: center; margin: 0;">
+    <img src="./assets/img/three_cars_1_cyan_6_purple_8_white_graph.png" alt="one_car_2_graph" style="width: 100%; height: auto;">
+    <figcaption>Graph Optimization</figcaption>
+  </figure>
+</div>
+
+The three-car scenario contained our only error in edge camera data, where car ID `3` incorrectly had three edge events, with a second, later exit being recorded at camera 4 after its correct exit at cmaera 5. Both algorithms incorrectly selected this faulty exit. 
 
 ---
 
@@ -485,6 +521,8 @@ Synthesize the main insights from your work.
 - What would you explore next if you had more time?  
 
 This should synthesize—not merely repeat—your results.
+
+The singular edge event ghost error we saw could be combated by algorithmically ignoring any duplicate exit events for a particular car ID once the first exit was recorded. This does not protect against incorrectly <i>early</i> ghost events, however, and high-volume testing for further robustness optimizations is recommended. 
 
 For future development regarding the tracking fusion algorithm, we could add additional cost and rules to the cost function that is currently just `mahalanobis_distance` function. Adding environmental constraints to the grid and simulating the CARLA environment would also enable path-feasibility rules, ensuring that a detection event would only be valid if the vehicle could have realistically moved to that location from the last state. 
 
