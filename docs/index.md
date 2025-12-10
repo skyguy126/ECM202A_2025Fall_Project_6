@@ -427,12 +427,20 @@ We now present a discussion of each demo scenario, its significance, and failure
   <em>Kalman Filter (Left) vs. Graph Optimization (Right)</em>
 </p>
     
-| Car ID | Metric | Kalman | Graph |
+| Frame | Time (s) | Ground Truth (GT) | Kalman (Est) | Graph (Est) |
+| :---: | :---: | :---: | :---: | :---: |
+| 724 | 36.20 | (34.2, 176.1) | (30.0, 202.5) [E:26.69] | (30.0, 202.5) [E:26.69] |
+| 794 | 39.70 | (35.1, 152.9) | (30.0, 143.3) [E:10.89] | (30.0, 142.5) [E:11.61] |
+| 1012 | 50.60 | (35.1, 80.5) | (30.0, 39.9) [E:40.94] | (30.0, 40.0) [E:40.86] |
+| 1366 | 68.30 | (35.4, -37.0) | (30.0, -49.6) [E:13.70] | (30.0, -50.0) [E:14.07] |
+| 1670 | 83.50 | (34.6, -137.8) | (35.0, -150.1) [E:12.27] | (35.0, -150.0) [E:12.20] |
+
+| Car ID | Metric | Kalman (Filtered) | Graph (Batch) |
 | :--- | :--- | :--- | :--- |
 | **1** | **Total Path Length** | 721.73 m | 721.73 m |
-| | **RMSE (Accuracy)** | 8.62 m | 10.20 m |
-| | **Error %** | **1.19%** | **1.41%** |
-| | **Max Drift** | 18.30 m | 18.30 m |
+| | **RMSE (Meters)** | 28.07 m | 26.82 m |
+| | **Error %** | **3.89%** | **3.72%** |
+| | **Max Drift (Meters)** | 43.39 m | 43.43 m |
 
 In this simple scenario, both approaches successfully detect all events in order, with no missing events, no added events, and no misclassified events. The quantitative metrics show comparable performance with error rates hovering near 1% of the total path length (1.19% for Kalman vs. 1.41% for Graph). This scenario is mostly a sanity check of our system, since with only one car in the area, identification of anonymous events is trivial. This scenario also shows global ID event tracking, as the car is not re-assigned a new identy upon exiting at the opposite edge camera. However, this test confirms that for simple, linear paths with sparse traffic, the Kalman Filter provides sufficient precision without the computational cost of the Graph Optimization.
 
