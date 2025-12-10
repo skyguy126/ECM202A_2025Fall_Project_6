@@ -461,6 +461,7 @@ We now present a discussion of each demo scenario, its significance, and failure
 | | **RMSE (Accuracy)** | 8.62 m | 10.20 m |
 | | **Error %** | **1.19%** | **1.41%** |
 | | **Max Drift** | 18.30 m | 18.30 m |
+
 </div>
 
 In this simple scenario, both approaches successfully detect all events in order, with no missing events, no added events, and no misclassified events. The quantitative metrics show comparable performance with error rates hovering near 1% of the total path length (1.19% for Kalman vs. 1.41% for Graph). This scenario is mostly a sanity check of our system, since with only one car in the area, identification of anonymous events is trivial. This scenario also shows global ID event tracking, as the car is not re-assigned a new identy upon exiting at the opposite edge camera. However, this test confirms that for simple, linear paths with sparse traffic, the Kalman Filter provides sufficient precision without the computational cost of the Graph optimization.
@@ -477,12 +478,13 @@ In this simple scenario, both approaches successfully detect all events in order
 
 <div align="center">
     
-| Car ID | Metric | Kalman (Real-time) | Graph (Batch) |
+| Car ID | Metric | Kalman | Graph |
 | :--- | :--- | :--- | :--- |
 | **1** | **Total Path Length** | 714.25 m | 714.25 m |
 | | **RMSE (Accuracy)** | 9.83 m | 4.41 m |
 | | **Error %** | **1.38%** | **0.62%** |
 | | **Max Drift** | 23.56 m | 6.92 m |
+
 </div>
 
 This scenario varies from the first in that the car exits from the same edge camera that it entered from. In addition, the route becomes slightly more complex, introducing turns and crossing the same camera (camera 1) at two different times. The Kalman Filter struggled with this maneuver; its prediction model drifted linearly, resulting in a Max Drift of 23.56m . The Graph Optimization leverages future constraints to interpolate turns, cutting the error percentage by more than half (0.62% vs 1.38%) and keeping the maximum drift within single digits.
@@ -503,7 +505,7 @@ This scenario varies from the first in that the car exits from the same edge cam
 
 <div align="center">
     
-| Car ID | Metric | Kalman (Real-time) | Graph (Batch) |
+| Car ID | Metric | Kalman | Graph |
 | :--- | :--- | :--- | :--- |
 | **1** | **Total Path Length** | 1222.73 m | 1222.73 m |
 | | **RMSE** | 115.88 m | 77.06 m |
@@ -513,6 +515,7 @@ This scenario varies from the first in that the car exits from the same edge cam
 | | **RMSE** | 193.55 m | 36.89 m |
 | | **Error %** | **27.10%** | **5.17%** |
 | | **Max Drift** | 460.57 m | 103.59 m |
+
 </div>
 
 This scenario introduces a second car. Both cars enter the town within a few seconds of each other from different edge cameras, and traverse paths inside the town. They near the center of the map at similar times, providing a test of spatial ambiguity. Due to error in the inner camera event where camera 9 miscalculatead 3 additional events, both algorithms predicted an event at the wrong location, resulting in the high Max Drift. However, the Graph Optimization method was able to recover the trajectory using global consistency, maintaining a 5.17% error rate despite the difficult conditions. This demonstrates the method's superior ability to recover from noisy data.
@@ -533,7 +536,7 @@ This scenario introduces a second car. Both cars enter the town within a few sec
 
 <div align="center">
     
-| Car ID | Metric | Kalman (Real-time) | Graph (Batch) |
+| Car ID | Metric | Kalman | Graph |
 | :--- | :--- | :--- | :--- |
 | **1** | **Total Path Length** | 714.18 m | 714.18 m |
 | | **RMSE** | 4.92 m | 4.94 m |
@@ -543,6 +546,7 @@ This scenario introduces a second car. Both cars enter the town within a few sec
 | | **RMSE** | 4.69 m | 4.68 m |
 | | **Error %** | **0.56%** | **0.55%** |
 | | **Max Drift** | 6.92 m | 6.91 m |
+
 </div>
 
 This scenario demonstrates the dependence of our algorithms on event data quality. In this scenario, we were able to obtain accurate inner camera events. As a result, both algorithms achieved minimal error rates, confirming that when data quality is high, the Kalman Filter can be just as effective as Graph Optimization.
@@ -563,7 +567,7 @@ This scenario demonstrates the dependence of our algorithms on event data qualit
 
 <div align="center">
     
-| Car ID | Metric | Kalman (Real-time) | Graph (Batch) |
+| Car ID | Metric | Kalman | Graph |
 | :--- | :--- | :--- | :--- |
 | **1** | **Total Path Length** | 1222.69 m | 1222.69 m |
 | | **RMSE** | 264.84 m | 20.67 m |
@@ -577,6 +581,7 @@ This scenario demonstrates the dependence of our algorithms on event data qualit
 | | **RMSE** | 4.83 m | 4.37 m |
 | | **Error %** | **0.22%** | **0.20%** |
 | | **Max Drift** | 7.49 m | 7.50 m |
+
 </div>
         
 The three-car scenario contained our only error in edge camera data, where one car incorrectly had three edge events, with a second, later exit being recorded at camera 4 after its correct exit at camera 5. Both algorithms incorrectly selected this faulty exit. This resulted in the high maximum drift we see. However, like Demo 2, the Graph Optimization was able to recover the correct trajectory and maintain a low error despite the conditions. 
@@ -593,11 +598,17 @@ Synthesize the main insights from your work.
 
 This should synthesize—not merely repeat—your results.
 
+This project successfully validated the core feasibility of fusing heterogeneous data sources for urban vehicle tracking. By demonstrating that encrypted 802.11 Wi-Fi traffic can be combined with sparse video data, we proved that vehicle trajectories can be reliably reconstructed even in challenging "blind" urban zones. Overall, the results highlight a core trade-off between latency and accuracy, as well as the strengths and weaknesses of different fusion strategies.
+
+Graph Optimization proved to be the superior method for trajectory reconstruction. By leveraging future predictions to satisfy global geometric constraints, it was able to consistently maintain a low error rate. It was able to effectively mitigated sensor noise and false positive inner camera events. Kalman Filtering (Real-Time) demonstrated efficiency and precision in sparse, linear scenarios (Demo 1 & 4), achieving sub-1% error rates when data quality was high. However, its reliance on a constant velocity model and lack of future context caused higher error rates and rendered it unable to mitigate error when inaccurate camera data was supplied, as demonstrated by severe drift in complex scenarios (e.g. Demo 5). 
+
 The singular edge event ghost error we saw could be combated by algorithmically ignoring any duplicate exit events for a particular car ID once the first exit was recorded. This does not protect against incorrectly <i>early</i> ghost events, however, and high-volume testing for further robustness optimizations is recommended. 
 
-For future development regarding the tracking fusion algorithm, we could add additional cost and rules to the cost function that is currently just `mahalanobis_distance` function. Adding environmental constraints to the grid and simulating the CARLA environment would also enable path-feasibility rules, ensuring that a detection event would only be valid if the vehicle could have realistically moved to that location from the last state. 
+Our initial assumption was that all cameras would share a similar noise baseline but we found out that some cameras (9 and 19) experienced a noise floor nearly doubled to other cameras, causing standard thresholds to trigger false positives constantly. In an attempt to capture less events we made the settings stricter but that caused the algorithm to detect no events. With more time we could solve this issue by obtaining more data and find an average settings for these cameras rather than custom tuning, or if figuring out where this huge noise might be coming from. Our data currently focuses on bitrate, but future iterations could incorporate things like packet size variance or arrival time to distinguish signal patterns and improve the model. 
 
-Our initial assumption was that all cameras would share a similar noise baseline but we found out that some cameras (9 and 19) experienced a noise floor nearly doubled to other cameras, causing standard thresholds to trigger false positives constantly. In an attempt to capture less events we made the settings stricter but that caused the algorithm to detect no events. With more time we could solve this issue by obtaining more data and find an average settings for these cameras rather than custom tuning, or if figuring out where this huge noise might be coming from. We are also focusing on bitrate right now, but future iterations could incorporate things like packet size variance or arrival time to distinguish signal patterns.
+Future development with the tracking fusion algorithm could involve adding additional cost and rules to the cost function that is currently just `mahalanobis_distance` function. Adding environmental constraints to the grid and simulating the CARLA environment would also enable path-feasibility rules, ensuring that a detection event would only be valid if the vehicle could have realistically moved to that location from the last state. 
+
+Overall, this project confirms that combining encrypted Wi-Fi traffic with sparse video can yield reliable cross-zone vehicle tracking, provided the reconstruction algorithm is capable of enforcing global consistency. With stronger environmental modeling and richer signal features, this fusion framework could scale into a practical, city-wide blind-zone tracking system.
 
 ---
 
