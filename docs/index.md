@@ -431,6 +431,7 @@ We now present a discussion of each demo scenario, its significance, and failure
 </p>
 
 <div align="center">
+    
 | Car ID | Metric | Kalman (Real-time) | Graph (Batch) |
 | :--- | :--- | :--- | :--- |
 | **1** | **Total Path Length** | 721.73 m | 721.73 m |
@@ -452,6 +453,7 @@ In this simple scenario, both approaches successfully detect all events in order
 </p>
 
 <div align="center">
+    
 | Car ID | Metric | Kalman (Real-time) | Graph (Batch) |
 | :--- | :--- | :--- | :--- |
 | **1** | **Total Path Length** | 714.25 m | 714.25 m |
@@ -477,6 +479,7 @@ This scenario varies from the first in that the car exits from the same edge cam
 </div>
 
 <div align="center">
+    
 | Car ID | Metric | Kalman (Real-time) | Graph (Batch) |
 | :--- | :--- | :--- | :--- |
 | **1** | **Total Path Length** | 1222.73 m | 1222.73 m |
@@ -506,6 +509,7 @@ This scenario introduces a second car. Both cars enter the town within a few sec
 </div>
 
 <div align="center">
+    
 | Car ID | Metric | Kalman (Real-time) | Graph (Batch) |
 | :--- | :--- | :--- | :--- |
 | **1** | **Total Path Length** | 714.18 m | 714.18 m |
@@ -535,6 +539,7 @@ This scenario demonstrates the dependence of our algorithms on event data qualit
 </div>
 
 <div align="center">
+    
 | Car ID | Metric | Kalman (Real-time) | Graph (Batch) |
 | :--- | :--- | :--- | :--- |
 | **1** | **Total Path Length** | 1222.69 m | 1222.69 m |
