@@ -356,7 +356,10 @@ Synthesize the main insights from your work.
 
 This should synthesize—not merely repeat—your results.
 
-- Adding additional cost and rules to the cost function that is currently just `mahalanobis_distance` function 
+For future development regarding the tracking fusion algorithm, we could add additional cost and rules to the cost function that is currently just `mahalanobis_distance` function. Adding environmental constraints to the grid and simulating the CARLA environment would also enable path-feasibility rules, ensuring that a detection event would only be valid if the vehicle could have realistically moved to that location from the last state. 
+
+Our initial assumption was that all cameras would share a similar noise baseline but we found out that some cameras (9 and 19) experienced a noise floor nearly doubled to other cameras, causing standard thresholds to trigger false positives constantly. In an attempt to capture less events we made the settings stricter but that caused the algorithm to detect no events. With more time we could solve this issue by obtaining  more data and find an average settings for these cameras rather than custom tuning, or if figuring out where this huge noise might be coming from. We are also focusing on bitrate right now, but future iterations could incorporate things like packet size variance or arrival time to distinguish signal patterns.
+
 ---
 
 # **6. References**
