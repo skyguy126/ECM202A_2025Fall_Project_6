@@ -460,6 +460,8 @@ This scenario varies from the first in that the car exits from the same edge cam
     <figure style="text-align: center; margin: 0;">
         <img src="./assets/img/two_cars_6_green_8_black_KF.png" alt="one_car_2_KF" style="width: 100%; height: auto;">
         <figcaption>Kalman Filter</figcaption>
+</div>
+<div>
     </figure>
     <figure style="text-align: center; margin: 0;">
         <img src="./assets/img/two_cars_6_green_8_black_graph.png" alt="one_car_2_graph" style="width: 100%; height: auto;">
@@ -556,6 +558,7 @@ Future development with the tracking fusion algorithm could involve adding addit
 
 TODO: VAMSI ADD MORE DETAILS ABOUT FUTURE WORK
 
+---
 
 # **6. References**
 
