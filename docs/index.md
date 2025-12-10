@@ -477,7 +477,7 @@ In this simple scenario, both approaches successfully detect all events in order
 
 <div align="center">
     
-| Car ID | Metric | Kalman (Real-time) | Graph (Batch) |
+| Car ID | Metric | Kalman | Graph |
 | :--- | :--- | :--- | :--- |
 | **1** | **Total Path Length** | 714.25 m | 714.25 m |
 | | **RMSE (Accuracy)** | 9.83 m | 4.41 m |
@@ -503,7 +503,7 @@ This scenario varies from the first in that the car exits from the same edge cam
 
 <div align="center">
     
-| Car ID | Metric | Kalman (Real-time) | Graph (Batch) |
+| Car ID | Metric | Kalman | Graph |
 | :--- | :--- | :--- | :--- |
 | **1** | **Total Path Length** | 1222.73 m | 1222.73 m |
 | | **RMSE** | 115.88 m | 77.06 m |
@@ -533,7 +533,7 @@ This scenario introduces a second car. Both cars enter the town within a few sec
 
 <div align="center">
     
-| Car ID | Metric | Kalman (Real-time) | Graph (Batch) |
+| Car ID | Metric | Kalman | Graph |
 | :--- | :--- | :--- | :--- |
 | **1** | **Total Path Length** | 714.18 m | 714.18 m |
 | | **RMSE** | 4.92 m | 4.94 m |
@@ -563,7 +563,7 @@ This scenario demonstrates the dependence of our algorithms on event data qualit
 
 <div align="center">
     
-| Car ID | Metric | Kalman (Real-time) | Graph (Batch) |
+| Car ID | Metric | Kalman | Graph |
 | :--- | :--- | :--- | :--- |
 | **1** | **Total Path Length** | 1222.69 m | 1222.69 m |
 | | **RMSE** | 264.84 m | 20.67 m |
@@ -593,11 +593,15 @@ Synthesize the main insights from your work.
 
 This should synthesize—not merely repeat—your results.
 
+This project successfully validated the core feasibility of fusing heterogeneous data sources for urban vehicle tracking. By demonstrating that encrypted 802.11 Wi-Fi traffic can be combined with sparse video data, we proved that vehicle trajectories can be reliably reconstructed even in challenging "blind" urban zones. Overall, the results highlight a core trade-off between latency and accuracy, as well as the strengths and weaknesses of different fusion strategies.
+
+Graph Optimization proved to be the superior method for trajectory reconstruction. By leveraging future predictions to satisfy global geometric constraints, it was able to consistently maintain a low error rate. It was able to effectively mitigated sensor noise and false positive inner camera events. Kalman Filtering (Real-Time) demonstrated efficiency and precision in sparse, linear scenarios (Demo 1 & 4), achieving sub-1% error rates when data quality was high. However, its reliance on a constant velocity model and lack of future context caused higher error rates and rendered it unable to mitigate error when inaccurate camera data was supplied, as demonstrated by severe drift in complex scenarios (e.g. Demo 5). 
+
 The singular edge event ghost error we saw could be combated by algorithmically ignoring any duplicate exit events for a particular car ID once the first exit was recorded. This does not protect against incorrectly <i>early</i> ghost events, however, and high-volume testing for further robustness optimizations is recommended. 
 
-For future development regarding the tracking fusion algorithm, we could add additional cost and rules to the cost function that is currently just `mahalanobis_distance` function. Adding environmental constraints to the grid and simulating the CARLA environment would also enable path-feasibility rules, ensuring that a detection event would only be valid if the vehicle could have realistically moved to that location from the last state. 
+Our initial assumption was that all cameras would share a similar noise baseline but we found out that some cameras (9 and 19) experienced a noise floor nearly doubled to other cameras, causing standard thresholds to trigger false positives constantly. In an attempt to capture less events we made the settings stricter but that caused the algorithm to detect no events. With more time we could solve this issue by obtaining more data and find an average settings for these cameras rather than custom tuning, or if figuring out where this huge noise might be coming from. Our data currently focuses on bitrate, but future iterations could incorporate things like packet size variance or arrival time to distinguish signal patterns and improve the model. 
 
-Our initial assumption was that all cameras would share a similar noise baseline but we found out that some cameras (9 and 19) experienced a noise floor nearly doubled to other cameras, causing standard thresholds to trigger false positives constantly. In an attempt to capture less events we made the settings stricter but that caused the algorithm to detect no events. With more time we could solve this issue by obtaining more data and find an average settings for these cameras rather than custom tuning, or if figuring out where this huge noise might be coming from. We are also focusing on bitrate right now, but future iterations could incorporate things like packet size variance or arrival time to distinguish signal patterns.
+Future development with the tracking fusion algorithm should involve adding additional cost and rules to the cost function that is currently just `mahalanobis_distance` function. Adding environmental constraints to the grid and simulating the CARLA environment would also enable path-feasibility rules, ensuring that a detection event would only be valid if the vehicle could have realistically moved to that location from the last state. 
 
 ---
 
