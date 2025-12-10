@@ -411,22 +411,6 @@ To evaluate the performance trade-offs between the Kalman Filter and the Graph O
 
 Due to the asynchronous nature of the ground truth data, which recorded valid vehicle coordinates without synchronized timestamps, a direct temporal comparison was not feasible. Instead, we used a spatial alignment approach and computed the error by determining the Euclidean distance from each estimated coordinate to its closest point on the ground truth path. Importantly, to ensure a fair comparison between the high frequency Kalman Filter (10 Hz) and the Graph Optimization output, we subsampled the Kalman predictions to align with the exact timestamps of the Graph Optimization nodes. This ensures that our smoothness metric evaluates the trajectory decisions at identical moments in time, rather than simply penalizing the real-time filter for its higher sampling rate. 
 
-# **6. References** **TEMPORARILY PLACED HERE UNTIL RENDERING BELOW IS FIXED**
-
-- Apthorpe, N., Reisman, D., & Feamster, N. (2017). A Smart Home is No Castle: Privacy Vulnerabilities of Encrypted IoT Traffic. Proceedings of the DAT Workshop.
-- Bewley, A., et al. (2016). Simple Online and Realtime Tracking (SORT). Proceedings of IEEE ICIP.
-- Dosovitskiy, A., et al. (2017). CARLA: An Open Urban Driving Simulator. Proceedings of the 1st Annual Conference on Robot Learning (CoRL).
-- Ji, X., et al. (2018). User Presence Inference via Encrypted Traffic of Wireless Camera in Smart Homes. Security and Communication Networks, vol. 2018.
-- Li, H., et al. (2016). Side-Channel Information Leakage of Encrypted Video Stream in Video Surveillance Systems. Proceedings of IEEE INFOCOM.
-- Tang, Z., et al. (2019). CityFlow: A City-Scale Benchmark for Multi-Target Multi-Camera Vehicle Tracking and Re-Identification. Proceedings of IEEE/CVF CVPR.
-- Tian, X., et al. (2021). Robust Privacy-Preserving Motion Detection and Object Tracking in Encrypted Streaming Video. IEEE Transactions on Information Forensics and Security (TIFS).
-- Shokri, R., et al. (2019). Visor: Privacy-Preserving Video Analytics as a Cloud Service. Microsoft Research Technical Report.
-- Electronic Frontier Foundation (EFF). (n.d.). Automated License Plate Readers. Street-Level Surveillance Project.
-- Gunjal, P. R., Gunjal, B. R., Shinde, H. A., Vanam, S. M., & Aher, S. S. (2018). Moving Object Tracking Using Kalman Filter. International Conference on Advances in Communication and Computing Technology (ICACCT), pp. 544–547. https://doi.org/10.1109/ICACCT.2018.8529402
-- Wang, X., Turetken, E., Fleuret, F., & Fua, P. (2014). Tracking Interacting Objects Optimally Using Integer Programming. In Computer Vision – ECCV 2014, pp. 17–32. https://doi.org/10.1007/978-3-319-10590-1_2
-- Zhou, K., Yang, Y., Cavallaro, A., & Xiang, T. (2019). Omni-Scale Feature Learning for Person Re-Identification. Proceedings of ICCV, pp. 3702–3712.
-- Caesar, H., Bankiti, V., Lang, A. H., Vora, S., Liong, V. E., Xu, Q., Behl, A., Bejnordi, O., Ouyang, B., Wang, S., Shi, H., & Menon, A. K. (2020). nuScenes: A Multimodal Dataset for Autonomous Driving. Proceedings of CVPR, pp. 11621–11631.
-
 ---
 
 ## Test Results
@@ -568,12 +552,26 @@ Our initial assumption was that all cameras would share a similar noise baseline
 
 Overall, this project confirms that combining encrypted Wi-Fi traffic with sparse video can yield reliable cross-zone vehicle tracking, provided the reconstruction algorithm is capable of enforcing global consistency. With stronger environmental modeling and richer signal features, this fusion framework could scale into a practical, city-wide blind-zone tracking system.
 
-# **6. Future Work**
-
 Future development with the tracking fusion algorithm could involve adding additional cost and rules to the cost function that is currently just `mahalanobis_distance` function. Adding environmental constraints to the grid and simulating the CARLA environment would also enable path-feasibility rules, ensuring that a detection event would only be valid if the vehicle could have realistically moved to that location from the last state. 
 
 TODO: VAMSI ADD MORE DETAILS ABOUT FUTURE WORK
 
+
+# **6. References**
+
+- Apthorpe, N., Reisman, D., & Feamster, N. (2017). A Smart Home is No Castle: Privacy Vulnerabilities of Encrypted IoT Traffic. Proceedings of the DAT Workshop.
+- Bewley, A., et al. (2016). Simple Online and Realtime Tracking (SORT). Proceedings of IEEE ICIP.
+- Dosovitskiy, A., et al. (2017). CARLA: An Open Urban Driving Simulator. Proceedings of the 1st Annual Conference on Robot Learning (CoRL).
+- Ji, X., et al. (2018). User Presence Inference via Encrypted Traffic of Wireless Camera in Smart Homes. Security and Communication Networks, vol. 2018.
+- Li, H., et al. (2016). Side-Channel Information Leakage of Encrypted Video Stream in Video Surveillance Systems. Proceedings of IEEE INFOCOM.
+- Tang, Z., et al. (2019). CityFlow: A City-Scale Benchmark for Multi-Target Multi-Camera Vehicle Tracking and Re-Identification. Proceedings of IEEE/CVF CVPR.
+- Tian, X., et al. (2021). Robust Privacy-Preserving Motion Detection and Object Tracking in Encrypted Streaming Video. IEEE Transactions on Information Forensics and Security (TIFS).
+- Shokri, R., et al. (2019). Visor: Privacy-Preserving Video Analytics as a Cloud Service. Microsoft Research Technical Report.
+- Electronic Frontier Foundation (EFF). (n.d.). Automated License Plate Readers. Street-Level Surveillance Project.
+- Gunjal, P. R., Gunjal, B. R., Shinde, H. A., Vanam, S. M., & Aher, S. S. (2018). Moving Object Tracking Using Kalman Filter. International Conference on Advances in Communication and Computing Technology (ICACCT), pp. 544–547. https://doi.org/10.1109/ICACCT.2018.8529402
+- Wang, X., Turetken, E., Fleuret, F., & Fua, P. (2014). Tracking Interacting Objects Optimally Using Integer Programming. In Computer Vision – ECCV 2014, pp. 17–32. https://doi.org/10.1007/978-3-319-10590-1_2
+- Zhou, K., Yang, Y., Cavallaro, A., & Xiang, T. (2019). Omni-Scale Feature Learning for Person Re-Identification. Proceedings of ICCV, pp. 3702–3712.
+- Caesar, H., Bankiti, V., Lang, A. H., Vora, S., Liong, V. E., Xu, Q., Behl, A., Bejnordi, O., Ouyang, B., Wang, S., Shi, H., & Menon, A. K. (2020). nuScenes: A Multimodal Dataset for Autonomous Driving. Proceedings of CVPR, pp. 11621–11631.
 ---
 
 # **7. Supplementary Material**
