@@ -25,16 +25,7 @@ title: "Urban Traﬃc Inference with Perimeter Vision & Encrypted-Camera Side-Ch
 
 ## 📝 **Abstract**
 
-Provide a short paragraph (4–6 sentences) summarizing:
-
-- The problem you addressed  
-- Your approach  
-- Key results  
-- The significance of your findings  
-
-This should be a standalone “TL;DR” of your project.
-
-Modern cities face a tension between traffic monitoring needs and privacy concerns. This project explores vehicle tracking in urban zones by fusing perimeter vision with encrypted-camera side-channel signals. We leverage entry/exit detections from edge cameras (YOLOv8 + ByteTrack + OSNet ReID for multi-camera association) and interior motion cues inferred from WiFi packet traces (LSTM-based bitrate analysis) to estimate vehicle counts, locations, and dwell times without direct observation of private feeds. Implemented in the CARLA simulator with Mininet-WiFi emulation, our Kalman-filter fusion system tracks multiple vehicles through realistic urban scenarios, achieving trajectory estimates within acceptable error bounds while operating near real-time. Results demonstrate that side-channel data can meaningfully augment visual tracking when carefully synchronized and fused, opening a new avenue for privacy-conscious urban sensing—though with important caveats about appearance variability, temporal alignment, and ethical deployment.
+Modern cities face a tension between traffic monitoring needs and privacy concerns. This project explores vehicle tracking in urban zones by fusing perimeter vision with encrypted-camera side-channel signals. We leverage entry/exit detections from edge cameras (YOLOv8 + ByteTrack + OSNet ReID for multi-camera association) and interior motion cues inferred from WiFi packet traces (LSTM-based bitrate analysis) to estimate vehicle counts, locations, and dwell times without direct observation of private feeds. Implemented in the CARLA simulator with Mininet-WiFi emulation, our Kalman-filter fusion system tracks multiple vehicles through realistic urban scenarios, achieving trajectory estimates within acceptable error bounds while operating near real-time. Results demonstrate that side-channel data can meaningfully augment visual tracking when carefully synchronized and fused, opening a new avenue for privacy-conscious urban sensing, though with important caveats about appearance variability, temporal alignment, and ethical deployment.
 
 ---
 
@@ -210,11 +201,11 @@ Overlapping windows of 16 frames are generated with stride 1 to retain fine temp
 
 Events are parsed on a per-camera basis using the methods described above, then synthesized into two final lists `all_edge_events.json` and `all_inner_events.json` that are sorted by time. These represent all the scenario data that will be provided to the final algorithm(s).
 
-#### Final Fusion Algorithm
+#### Fusion Algorithm
 
 We compare two approaches that perform inference upon the final lists of edge and inner events. 
 
-#### Kalman Filter + Hungarian Algorithm Approach
+#### Kalman Filter + Hungarian Algorithm
 
 To integrate data from the edge cameras with the anonymous location data from the inner cameras, we designed a tracking algorithm using a Kalman filter and softmax-based data association. We modeled the vehicle state as a four-dimensional vector representing position and velocity in the 2D plane, assuming a constant velocity motion model. As sensing differ between the two types of cameras, we assigned separate measurement noise covariance matrices. The edge cameras provide ground-truth localization so they are assigned a low noise variance, whereas the inner cameras are subject to more noise and estimation errors and are assigned a higher variance. This ensures the filter trusts the edge data significantly more while still allowing the inner data to smooth the trajectory and update velocity estimates throughout the blind zone.
 
@@ -222,7 +213,7 @@ To associate inner camera events to existing vehicle tracks, we use a softmax-we
 
 Track management is handled through the edge-camera IDs. When an edge camera detects a car ID that does not exist in the current state, a new Kalman filter instance is initialized at that location. Then, to prevent premature track deletion due to sensor noise near the boundaries, we implement a robust exit logic. A track is only deleted if the vehicle is at the extreme north or south limits within the lane width and has been active for a minimum duration of 10 frames. This ensures reliable termination of tracks without sacrificing continuity.
 
-The high-level pseudocode is thus: 
+**The high-level pseudocode is thus:**
 
 ```
 # sorted by timestamp
