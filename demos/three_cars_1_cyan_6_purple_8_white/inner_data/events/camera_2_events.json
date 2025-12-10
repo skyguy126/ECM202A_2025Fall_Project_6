@@ -1,20 +1,14 @@
 [
   {
     "event": 1,
-    "start_s": 28.45,
-    "end_s": 37.9,
-    "duration": 9.45
+    "start_s": 29.25,
+    "end_s": 36.4,
+    "duration": 7.149999999999999
   },
   {
     "event": 2,
-    "start_s": 55.65,
-    "end_s": 60.65,
-    "duration": 5.0
-  },
-  {
-    "event": 3,
-    "start_s": 64.05,
-    "end_s": 66.2,
-    "duration": 2.1500000000000057
+    "start_s": 56.5,
+    "end_s": 65.9,
+    "duration": 9.400000000000006
   }
 ]

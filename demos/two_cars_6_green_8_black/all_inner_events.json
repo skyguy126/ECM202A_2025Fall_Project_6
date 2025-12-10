@@ -1,21 +1,9 @@
 [
   {
     "event": 1,
-    "start_s": 2.1,
-    "end_s": 6.6,
-    "duration": 4.5,
-    "camera_id": 10,
-    "location": [
-      127.5,
-      0.0,
-      15.0
-    ]
-  },
-  {
-    "event": 1,
-    "start_s": 11.3,
-    "end_s": 14.75,
-    "duration": 3.4499999999999993,
+    "start_s": 12.55,
+    "end_s": 14.95,
+    "duration": 2.3999999999999986,
     "camera_id": 6,
     "location": [
       30.0,
@@ -24,34 +12,10 @@
     ]
   },
   {
-    "event": 2,
-    "start_s": 12.0,
-    "end_s": 13.5,
-    "duration": 1.5,
-    "camera_id": 10,
-    "location": [
-      127.5,
-      0.0,
-      15.0
-    ]
-  },
-  {
     "event": 1,
-    "start_s": 12.35,
-    "end_s": 13.95,
-    "duration": 1.5999999999999996,
-    "camera_id": 27,
-    "location": [
-      -125.0,
-      -45.0,
-      20.0
-    ]
-  },
-  {
-    "event": 1,
-    "start_s": 13.95,
-    "end_s": 18.1,
-    "duration": 4.150000000000002,
+    "start_s": 14.0,
+    "end_s": 20.85,
+    "duration": 6.850000000000001,
     "camera_id": 1,
     "location": [
       35.0,
@@ -61,21 +25,21 @@
   },
   {
     "event": 1,
-    "start_s": 24.9,
-    "end_s": 34.0,
-    "duration": 9.100000000000001,
-    "camera_id": 2,
+    "start_s": 24.95,
+    "end_s": 29.45,
+    "duration": 4.5,
+    "camera_id": 9,
     "location": [
-      30.0,
-      -50.0,
-      20.0
+      72.5,
+      85.0,
+      17.5
     ]
   },
   {
     "event": 1,
-    "start_s": 26.25,
-    "end_s": 30.2,
-    "duration": 3.9499999999999993,
+    "start_s": 26.8,
+    "end_s": 32.2,
+    "duration": 5.400000000000002,
     "camera_id": 12,
     "location": [
       132.5,
@@ -84,10 +48,10 @@
     ]
   },
   {
-    "event": 2,
-    "start_s": 37.05,
-    "end_s": 38.6,
-    "duration": 1.5500000000000043,
+    "event": 1,
+    "start_s": 28.85,
+    "end_s": 35.5,
+    "duration": 6.649999999999999,
     "camera_id": 2,
     "location": [
       30.0,
@@ -96,10 +60,34 @@
     ]
   },
   {
-    "event": 3,
-    "start_s": 37.35,
-    "end_s": 39.1,
-    "duration": 1.75,
+    "event": 2,
+    "start_s": 38.0,
+    "end_s": 42.6,
+    "duration": 4.600000000000001,
+    "camera_id": 9,
+    "location": [
+      72.5,
+      85.0,
+      17.5
+    ]
+  },
+  {
+    "event": 1,
+    "start_s": 42.65,
+    "end_s": 45.85,
+    "duration": 3.200000000000003,
+    "camera_id": 14,
+    "location": [
+      -12.5,
+      2.5,
+      17.5
+    ]
+  },
+  {
+    "event": 1,
+    "start_s": 50.7,
+    "end_s": 56.15,
+    "duration": 5.449999999999996,
     "camera_id": 10,
     "location": [
       127.5,
@@ -109,33 +97,9 @@
   },
   {
     "event": 1,
-    "start_s": 41.4,
-    "end_s": 43.95,
-    "duration": 2.5500000000000043,
-    "camera_id": 14,
-    "location": [
-      -12.5,
-      2.5,
-      17.5
-    ]
-  },
-  {
-    "event": 4,
-    "start_s": 49.65,
-    "end_s": 55.15,
-    "duration": 5.5,
-    "camera_id": 10,
-    "location": [
-      127.5,
-      0.0,
-      15.0
-    ]
-  },
-  {
-    "event": 2,
-    "start_s": 62.0,
-    "end_s": 70.05,
-    "duration": 8.049999999999997,
+    "start_s": 63.25,
+    "end_s": 71.15,
+    "duration": 7.900000000000006,
     "camera_id": 27,
     "location": [
       -125.0,
@@ -144,46 +108,10 @@
     ]
   },
   {
-    "event": 3,
-    "start_s": 62.3,
-    "end_s": 64.05,
-    "duration": 1.75,
-    "camera_id": 2,
-    "location": [
-      30.0,
-      -50.0,
-      20.0
-    ]
-  },
-  {
-    "event": 5,
-    "start_s": 62.3,
-    "end_s": 64.2,
-    "duration": 1.9000000000000057,
-    "camera_id": 10,
-    "location": [
-      127.5,
-      0.0,
-      15.0
-    ]
-  },
-  {
-    "event": 2,
-    "start_s": 62.7,
-    "end_s": 64.65,
-    "duration": 1.9500000000000028,
-    "camera_id": 14,
-    "location": [
-      -12.5,
-      2.5,
-      17.5
-    ]
-  },
-  {
     "event": 1,
-    "start_s": 74.7,
-    "end_s": 77.55,
-    "duration": 2.8499999999999943,
+    "start_s": 75.65,
+    "end_s": 79.65,
+    "duration": 4.0,
     "camera_id": 19,
     "location": [
       -87.5,
@@ -193,9 +121,9 @@
   },
   {
     "event": 2,
-    "start_s": 82.15,
-    "end_s": 87.55,
-    "duration": 5.3999999999999915,
+    "start_s": 83.15,
+    "end_s": 89.0,
+    "duration": 5.849999999999994,
     "camera_id": 6,
     "location": [
       30.0,
@@ -205,9 +133,9 @@
   },
   {
     "event": 1,
-    "start_s": 85.15,
-    "end_s": 88.6,
-    "duration": 3.4499999999999886,
+    "start_s": 85.75,
+    "end_s": 92.6,
+    "duration": 6.849999999999994,
     "camera_id": 13,
     "location": [
       -12.5,
@@ -216,46 +144,22 @@
     ]
   },
   {
-    "event": 2,
-    "start_s": 86.9,
-    "end_s": 89.1,
-    "duration": 2.1999999999999886,
-    "camera_id": 19,
+    "event": 3,
+    "start_s": 88.45,
+    "end_s": 92.7,
+    "duration": 4.25,
+    "camera_id": 9,
     "location": [
-      -87.5,
-      -92.5,
-      20.0
-    ]
-  },
-  {
-    "event": 6,
-    "start_s": 87.35,
-    "end_s": 89.4,
-    "duration": 2.0500000000000114,
-    "camera_id": 10,
-    "location": [
-      127.5,
-      0.0,
-      15.0
+      72.5,
+      85.0,
+      17.5
     ]
   },
   {
     "event": 2,
-    "start_s": 90.9,
-    "end_s": 92.8,
-    "duration": 1.8999999999999915,
-    "camera_id": 13,
-    "location": [
-      -12.5,
-      -90.0,
-      20.0
-    ]
-  },
-  {
-    "event": 2,
-    "start_s": 100.9,
-    "end_s": 105.2,
-    "duration": 4.299999999999997,
+    "start_s": 101.1,
+    "end_s": 107.4,
+    "duration": 6.300000000000011,
     "camera_id": 1,
     "location": [
       35.0,
@@ -264,39 +168,15 @@
     ]
   },
   {
-    "event": 3,
-    "start_s": 112.4,
-    "end_s": 114.0,
-    "duration": 1.5999999999999943,
-    "camera_id": 27,
-    "location": [
-      -125.0,
-      -45.0,
-      20.0
-    ]
-  },
-  {
-    "event": 3,
-    "start_s": 113.15,
-    "end_s": 114.65,
-    "duration": 1.5,
-    "camera_id": 19,
-    "location": [
-      -87.5,
-      -92.5,
-      20.0
-    ]
-  },
-  {
     "event": 4,
-    "start_s": 124.8,
-    "end_s": 126.6,
-    "duration": 1.7999999999999972,
-    "camera_id": 27,
+    "start_s": 138.1,
+    "end_s": 143.35,
+    "duration": 5.25,
+    "camera_id": 9,
     "location": [
-      -125.0,
-      -45.0,
-      20.0
+      72.5,
+      85.0,
+      17.5
     ]
   }
 ]

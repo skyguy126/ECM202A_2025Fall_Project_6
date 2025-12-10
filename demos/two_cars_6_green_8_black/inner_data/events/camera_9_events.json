@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "event": 1,
+    "start_s": 24.95,
+    "end_s": 29.45,
+    "duration": 4.5
+  },
+  {
+    "event": 2,
+    "start_s": 38.0,
+    "end_s": 42.6,
+    "duration": 4.600000000000001
+  },
+  {
+    "event": 3,
+    "start_s": 88.45,
+    "end_s": 92.7,
+    "duration": 4.25
+  },
+  {
+    "event": 4,
+    "start_s": 138.1,
+    "end_s": 143.35,
+    "duration": 5.25
+  }
+]

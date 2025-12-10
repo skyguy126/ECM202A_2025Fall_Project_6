@@ -1,57 +1,9 @@
 [
   {
     "event": 1,
-    "start_s": 2.0,
-    "end_s": 4.4,
-    "duration": 2.4000000000000004,
-    "camera_id": 14,
-    "location": [
-      -12.5,
-      2.5,
-      17.5
-    ]
-  },
-  {
-    "event": 1,
-    "start_s": 2.0,
-    "end_s": 3.8,
-    "duration": 1.7999999999999998,
-    "camera_id": 27,
-    "location": [
-      -125.0,
-      -45.0,
-      20.0
-    ]
-  },
-  {
-    "event": 1,
-    "start_s": 12.25,
-    "end_s": 15.35,
-    "duration": 3.0999999999999996,
-    "camera_id": 1,
-    "location": [
-      35.0,
-      -150.0,
-      17.5
-    ]
-  },
-  {
-    "event": 2,
-    "start_s": 12.55,
-    "end_s": 14.05,
-    "duration": 1.5,
-    "camera_id": 14,
-    "location": [
-      -12.5,
-      2.5,
-      17.5
-    ]
-  },
-  {
-    "event": 2,
-    "start_s": 17.6,
-    "end_s": 19.6,
-    "duration": 2.0,
+    "start_s": 12.7,
+    "end_s": 20.05,
+    "duration": 7.350000000000001,
     "camera_id": 1,
     "location": [
       35.0,
@@ -61,9 +13,9 @@
   },
   {
     "event": 1,
-    "start_s": 27.75,
-    "end_s": 34.4,
-    "duration": 6.649999999999999,
+    "start_s": 29.0,
+    "end_s": 36.6,
+    "duration": 7.600000000000001,
     "camera_id": 2,
     "location": [
       30.0,
@@ -72,10 +24,10 @@
     ]
   },
   {
-    "event": 3,
-    "start_s": 41.8,
-    "end_s": 44.0,
-    "duration": 2.200000000000003,
+    "event": 1,
+    "start_s": 42.85,
+    "end_s": 45.9,
+    "duration": 3.049999999999997,
     "camera_id": 14,
     "location": [
       -12.5,
@@ -84,9 +36,9 @@
     ]
   },
   {
-    "event": 4,
-    "start_s": 61.95,
-    "end_s": 64.0,
+    "event": 2,
+    "start_s": 63.0,
+    "end_s": 65.05,
     "duration": 2.049999999999997,
     "camera_id": 14,
     "location": [
@@ -96,10 +48,10 @@
     ]
   },
   {
-    "event": 2,
-    "start_s": 62.15,
-    "end_s": 69.7,
-    "duration": 7.550000000000004,
+    "event": 1,
+    "start_s": 63.25,
+    "end_s": 70.8,
+    "duration": 7.549999999999997,
     "camera_id": 27,
     "location": [
       -125.0,
@@ -109,9 +61,9 @@
   },
   {
     "event": 1,
-    "start_s": 85.25,
-    "end_s": 91.3,
-    "duration": 6.049999999999997,
+    "start_s": 88.6,
+    "end_s": 92.25,
+    "duration": 3.6500000000000057,
     "camera_id": 13,
     "location": [
       -12.5,
@@ -120,26 +72,14 @@
     ]
   },
   {
-    "event": 5,
-    "start_s": 87.5,
-    "end_s": 89.3,
-    "duration": 1.7999999999999972,
-    "camera_id": 14,
+    "event": 2,
+    "start_s": 101.5,
+    "end_s": 107.4,
+    "duration": 5.900000000000006,
+    "camera_id": 1,
     "location": [
-      -12.5,
-      2.5,
-      17.5
-    ]
-  },
-  {
-    "event": 6,
-    "start_s": 112.1,
-    "end_s": 114.0,
-    "duration": 1.9000000000000057,
-    "camera_id": 14,
-    "location": [
-      -12.5,
-      2.5,
+      35.0,
+      -150.0,
       17.5
     ]
   }

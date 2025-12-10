@@ -1,0 +1,92 @@
+[
+  {
+    "type": "edge",
+    "timestamp": 11.15,
+    "location": {
+      "x": 35.0,
+      "y": -200.0
+    },
+    "car_id": 1,
+    "camera_id": 4
+  },
+  {
+    "type": "inner",
+    "timestamp": 12.7,
+    "location": {
+      "x": 35.0,
+      "y": -150.0
+    },
+    "car_id": 1,
+    "camera_id": 1
+  },
+  {
+    "type": "inner",
+    "timestamp": 29.0,
+    "location": {
+      "x": 30.0,
+      "y": -50.0
+    },
+    "car_id": 1,
+    "camera_id": 2
+  },
+  {
+    "type": "inner",
+    "timestamp": 42.85,
+    "location": {
+      "x": -12.5,
+      "y": 2.5
+    },
+    "car_id": 1,
+    "camera_id": 14
+  },
+  {
+    "type": "inner",
+    "timestamp": 63.0,
+    "location": {
+      "x": -12.5,
+      "y": 2.5
+    },
+    "car_id": 1,
+    "camera_id": 14
+  },
+  {
+    "type": "inner",
+    "timestamp": 63.25,
+    "location": {
+      "x": -125.0,
+      "y": -45.0
+    },
+    "car_id": 1,
+    "camera_id": 27
+  },
+  {
+    "type": "inner",
+    "timestamp": 88.6,
+    "location": {
+      "x": -12.5,
+      "y": -90.0
+    },
+    "car_id": 1,
+    "camera_id": 13
+  },
+  {
+    "type": "inner",
+    "timestamp": 101.5,
+    "location": {
+      "x": 35.0,
+      "y": -150.0
+    },
+    "car_id": 1,
+    "camera_id": 1
+  },
+  {
+    "type": "edge",
+    "timestamp": 109.85,
+    "location": {
+      "x": 35.0,
+      "y": -200.0
+    },
+    "car_id": 1,
+    "camera_id": 4
+  }
+]
