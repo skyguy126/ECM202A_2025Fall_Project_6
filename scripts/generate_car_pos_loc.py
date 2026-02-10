@@ -97,12 +97,14 @@ def worker(client, world):
     # Simulation loop
     # -------------------------------------------
     try:
+        first = True
         for wp in route_waypoints:
             wp_loc = wp.transform.location
             print(f"Next waypoint: x={wp_loc.x:.2f}, y={wp_loc.y:.2f}, z={wp_loc.z:.2f}")
 
             # Set the current waypoint as the destination
-            agent.set_destination(vehicle.get_location(), wp_loc, clean=True)
+            agent.set_destination(vehicle.get_location(), wp_loc, clean=first)
+            first = False
 
             tick_counter = 0
             print_interval = 20  # print every 20 ticks (~1 second if tick = 0.05s)
@@ -126,7 +128,7 @@ def worker(client, world):
 
                     # this never gets hit because of the exception
                     # Check if we are close enough to the current waypoint
-                    if dist < 2.0:  # 2-meter tolerance
+                    if dist < 4.0:  # 2-meter tolerance
                         break
                 except Exception as e:
                     print(e, "agent error, next waypoint")
