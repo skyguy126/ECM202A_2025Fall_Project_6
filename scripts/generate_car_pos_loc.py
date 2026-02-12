@@ -121,8 +121,8 @@ def worker(client, world):
                     dist = vehicle.get_location().distance(wp_loc)
 
                     # # Only print every print_interval ticks
-                    # if tick_counter % print_interval == 0:
-                    #     print(f"Distance to waypoint: {dist:.2f} meters")
+                    if tick_counter % print_interval == 0:
+                        print(f"Distance to waypoint: {dist:.2f} meters")
 
                     tick_counter += 1
 
