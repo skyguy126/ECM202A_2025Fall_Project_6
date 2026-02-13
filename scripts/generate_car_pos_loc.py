@@ -59,12 +59,7 @@ def worker(client, world):
             outside_spawns.append(sp)
 
     # We can change the number of waypoints internally.
-    route_points = [
-        random.choice(inside_spawns),
-        random.choice(inside_spawns),
-        random.choice(inside_spawns),
-        random.choice(inside_spawns),
-    ]
+    route_points = [random.choice(inside_spawns) for _ in range(100)]
 
     print("Spawn at:", route_points[0].location)
 
@@ -104,6 +99,25 @@ def worker(client, world):
         first = True
 
         for t in route_points[1:]:
+            # Reject waypoint if behind the car or would cause route planner to U-turn
+            loc = vehicle.get_location()
+            transform = vehicle.get_transform()
+            forward = transform.get_forward_vector()
+            dx = t.location.x - loc.x
+            dy = t.location.y - loc.y
+            dist_to_wp = (dx * dx + dy * dy) ** 0.5
+            if dist_to_wp >= 1e-3:
+                dir_x = dx / dist_to_wp
+                dir_y = dy / dist_to_wp
+                dot = forward.x * dir_x + forward.y * dir_y
+                # dot < 0: behind; dot < 0.5: sharp turn / potential U-turn (~60° off heading)
+                if dot < 0.5:
+                    print("Skipping waypoint (behind vehicle or would cause U-turn):", t.location)
+                    continue
+            else:
+                print("Skipping waypoint (already at waypoint):", t.location)
+                continue
+
             print("changing to new destination:", t.location)
             agent.set_destination(vehicle.get_location(), t.location, clean=first)
 
