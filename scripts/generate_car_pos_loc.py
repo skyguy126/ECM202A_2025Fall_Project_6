@@ -10,6 +10,15 @@ import numpy as np
 random.seed(42)
 np.random.seed(42)
 
+import builtins, traceback
+_real_print = builtins.print
+def hook(*a, **k):
+    s = " ".join(map(str, a))
+    if "deque index out of range" in s:
+        traceback.print_stack(limit=12)
+    _real_print(*a, **k)
+builtins.print = hook
+
 # -------------------------------------------
 # Configuration (edit these instead of using CLI args)
 # -------------------------------------------
@@ -78,7 +87,8 @@ def worker(client, world):
     # -----------------------------
     # Initialize the agent
     # -----------------------------
-    agent = BehaviorAgent(vehicle, ignore_traffic_light=False, behavior="normal")
+    agent = BehaviorAgent(vehicle, ignore_traffic_light=True, behavior="normal")
+    lp = agent._local_planner
 
     print("Starting route...")
 
@@ -94,12 +104,25 @@ def worker(client, world):
         first = True
 
         for t in route_points[1:]:
+            print("changing to new destination:", t.location)
             agent.set_destination(vehicle.get_location(), t.location, clean=first)
+
+            for _ in range(5):
+                world.tick()
+
             first = False
             tick_counter = 0
 
             while True:
+
+                if len(lp.waypoints_queue) == 0:
+                    break
+
                 agent.update_information(world)
+
+                if getattr(agent, "incoming_waypoint", None) is None:
+                    break
+
                 control = agent.run_step()
                 vehicle.apply_control(control)
                 world.tick()
@@ -110,6 +133,7 @@ def worker(client, world):
                 tick_counter += 1
 
                 if dist < 4.0:  # distance tolerance to move to next waypoint
+                    print("breaking due to distance heruistic")
                     break
 
         print("Reached destination.")
