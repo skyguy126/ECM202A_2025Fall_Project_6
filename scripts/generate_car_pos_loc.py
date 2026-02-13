@@ -59,13 +59,6 @@ def worker(client, world):
 
     print("Spawn at:", route_points[0].location)
 
-    # Convert transforms (after spawnpoint) to waypoints
-    route_waypoints = [] 
-    for t in route_points[1:]:
-        wp = w_map.get_waypoint(t.location, project_to_road=True, lane_type=carla.LaneType.Driving)
-        route_waypoints.append(wp)
-        print(f"Waypoint: x={wp.transform.location.x:.2f}, y={wp.transform.location.y:.2f}, z={wp.transform.location.z:.2f}")
-
     # -------------------------------------------
     # Spawn the vehicle
     # -------------------------------------------
@@ -86,7 +79,7 @@ def worker(client, world):
     # Initialize the agent
     # -----------------------------
     agent = BehaviorAgent(vehicle, ignore_traffic_light=False, behavior="normal")
-   
+
     print("Starting route...")
 
     # Tick the world a few times so everything initializes
@@ -94,44 +87,29 @@ def worker(client, world):
         world.tick()
 
     # -------------------------------------------
-    # Simulation loop
+    # Simulation loop: destination-only, distance-based heuristic per waypoint
     # -------------------------------------------
     try:
+        print_interval = 20  # print every 20 ticks (~1 second if tick = 0.05s)
         first = True
-        for wp in route_waypoints:
-            wp_loc = wp.transform.location
-            print(f"Next waypoint: x={wp_loc.x:.2f}, y={wp_loc.y:.2f}, z={wp_loc.z:.2f}")
 
-            # Set the current waypoint as the destination
-            agent.set_destination(vehicle.get_location(), wp_loc, clean=first)
+        for t in route_points[1:]:
+            agent.set_destination(vehicle.get_location(), t.location, clean=first)
             first = False
-
             tick_counter = 0
-            print_interval = 20  # print every 20 ticks (~1 second if tick = 0.05s)
 
-            # Loop until we reach this waypoint
             while True:
-                try:
-                    agent.update_information(world)
-                    control = agent.run_step()
-                    vehicle.apply_control(control)
-                    world.tick()
+                agent.update_information(world)
+                control = agent.run_step()
+                vehicle.apply_control(control)
+                world.tick()
 
-                    # Compute distance to waypoint
-                    dist = vehicle.get_location().distance(wp_loc)
+                dist = vehicle.get_location().distance(t.location)
+                if tick_counter % print_interval == 0:
+                    print(f"Distance to waypoint: {dist:.2f} meters")
+                tick_counter += 1
 
-                    # # Only print every print_interval ticks
-                    if tick_counter % print_interval == 0:
-                        print(f"Distance to waypoint: {dist:.2f} meters")
-
-                    tick_counter += 1
-
-                    # this never gets hit because of the exception
-                    # Check if we are close enough to the current waypoint
-                    if dist < 4.0:  # 2-meter tolerance
-                        break
-                except Exception as e:
-                    print(e, "agent error, next waypoint")
+                if dist < 4.0:  # distance tolerance to move to next waypoint
                     break
 
         print("Reached destination.")
