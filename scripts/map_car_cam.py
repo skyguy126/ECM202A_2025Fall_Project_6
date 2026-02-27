@@ -28,8 +28,9 @@ TOWN_NAME = "Town05"
 
 CAMERA_CONFIGS = util.CAMERA_CONFIGS
 
+PREFIX_DIR = "/media/ubuntu/Samsung/carla"  # Set this to a folder path string (e.g., "/tmp/my_data/") or leave as "" for current directory
 now = datetime.datetime.now()
-ROOT_DIR = now.strftime("%Y_%m_%d_%H_%M_%S") + f"_{SEED}"
+ROOT_DIR = os.path.join(PREFIX_DIR, now.strftime("%Y_%m_%d_%H_%M_%S") + f"_{SEED}")
 
 print(f"Root directory: {ROOT_DIR}")
 
