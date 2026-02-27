@@ -2,7 +2,8 @@ import carla
 import time
 import random
 import sys, os, subprocess
-from queue import Queue
+import json
+from queue import Queue, Empty
 import signal
 from agents.navigation.basic_agent import BasicAgent
 import util
@@ -20,7 +21,7 @@ SEED = args.seed if args.seed is not None else 42
 random.seed(SEED)
 np.random.seed(SEED)
 
-ROUTE_POINTS = 100
+ROUTE_POINTS = 50
 
 TM_PORT = 8000  # port for traffic manager
 TOWN_NAME = "Town05"
@@ -106,7 +107,7 @@ def worker(client, world, camera_data, vehicle_positions):
 
     if vehicle is None:
         print("Failed to spawn vehicle.")
-        return
+        return 0
 
     world.player = vehicle 
     # vehicle.set_autopilot(False, TM_PORT)  # important! BehaviorAgent controls it manually
@@ -127,6 +128,7 @@ def worker(client, world, camera_data, vehicle_positions):
     # -------------------------------------------
     # Simulation loop: destination-only, distance-based heuristic per waypoint
     # -------------------------------------------
+    total_frames = 0
     try:
         print_interval = 20  # print every 20 ticks (~1 second if tick = 0.05s)
 
@@ -160,7 +162,6 @@ def worker(client, world, camera_data, vehicle_positions):
                 world.tick()
 
             tick_counter = 0 # purely for printing
-            total_frames = 0 # total number of frames
 
             while True:
 
@@ -196,10 +197,9 @@ def worker(client, world, camera_data, vehicle_positions):
                 # save camera frame
                 for cam_info in camera_data:
                     try:
-                        frame = cam_info['queue'].get(timeout=0.1)
+                        frame = cam_info['queue'].get(timeout=0.5)
                     except Empty:
-                        print("no frame from camera {cam_info['id']}")
-                        continue
+                        raise RuntimeError(f"No frame received from camera {cam_info['id']}")
     
                     # Convert frame to numpy array (BGRA -> BGR)
                     arr = np.frombuffer(frame.raw_data, np.uint8).reshape(
@@ -234,9 +234,7 @@ def worker(client, world, camera_data, vehicle_positions):
         for _ in range(5):
             world.tick()
 
-        # TODO: SANITY CHECK NUM FRAMES == TIMESTEPS
-        # TODO:
-        # TODO:
+    return total_frames
 
 def init_cameras(client, world, camera_data):
     util.check_sync(world)
@@ -335,7 +333,8 @@ def main():
 
     # start worker function
     vehicle_positions = pd.DataFrame(columns=['x', 'y', 'z', 'theta1', 'theta2', 'theta3', 'vx', 'vy', 'vz', 'speed', 'car_visible'])
-    worker(client, world, camera_data, vehicle_positions)
+    total_frames = worker(client, world, camera_data, vehicle_positions)
+    assert total_frames == len(vehicle_positions), f"total_frames ({total_frames}) != len(vehicle_positions) ({len(vehicle_positions)})"
 
     # save truth dataframe to y/camera_X_truth.csv for each camera
     y_dir = os.path.join(ROOT_DIR, "y")
@@ -344,6 +343,20 @@ def main():
         path = os.path.join(y_dir, f"camera_{cam_info['id']}_truth.csv")
         vehicle_positions.to_csv(path, index=False)
         print(f"Saved truth to {path}")
+
+    # save run parameters to params.json
+    camera_params = {
+        cfg["id"]: {"pos": list(cfg["pos"]), "rot": list(cfg["rot"])}
+        for cfg in util.CAMERA_CONFIGS
+    }
+    params_path = os.path.join(ROOT_DIR, "params.json")
+    with open(params_path, "w") as f:
+        json.dump({
+            "random_seed": SEED,
+            "total_frames": total_frames,
+            "camera_params": camera_params,
+        }, f, indent=4)
+    print(f"Saved params to {params_path}")
 
     # cleanup
     stop_cameras(camera_data)
