@@ -19,7 +19,7 @@ SEED = args.seed if args.seed is not None else 42
 random.seed(SEED)
 np.random.seed(SEED)
 
-ROUTE_POINTS = 5
+ROUTE_POINTS = 150
 
 TM_PORT = 8000  # port for traffic manager
 TOWN_NAME = "Town05"
@@ -61,7 +61,7 @@ def load_town(client):
     print("Spectator moved to bird's eye position.")
     print("loaded town")
 
-def worker(client, world):
+def worker(client, world, camera_data, vehicle_positions):
 
     tm = client.get_trafficmanager(TM_PORT)
     tm.set_synchronous_mode(True)
@@ -158,7 +158,8 @@ def worker(client, world):
             for _ in range(5):
                 world.tick()
 
-            tick_counter = 0
+            tick_counter = 0 # purely for printing
+            total_frames = 0 # total number of frames
 
             while True:
 
@@ -170,7 +171,34 @@ def worker(client, world):
                 vehicle.apply_control(control)
                 world.tick()
 
-                dist = vehicle.get_location().distance(t.location)
+                total_frames += 1
+                vehicle_location = vehicle.get_location()
+
+                # save camera frame
+                for cam_info in camera_data:
+                    try:
+                        frame = cam_info['queue'].get(timeout=0.1)
+                    except Empty:
+                        print("no frame from camera {cam_info['id']}")
+                        continue
+    
+                    # Convert frame to numpy array (BGRA -> BGR)
+                    arr = np.frombuffer(frame.raw_data, np.uint8).reshape(
+                        (frame.height, frame.width, 4)
+                    )[:, :, :3].copy()
+                    
+                    # Sanity: dimensions must match what we told ffmpeg
+                    assert frame.width == util.WIDTH and frame.height == util.HEIGHT
+    
+                    # Write raw bytes to ffmpeg stdin
+                    try:
+                        cam_info['ffmpeg_proc'].stdin.write(arr.tobytes())
+                    except BrokenPipeError:
+                        print(f"Warning: ffmpeg process for camera {cam_info['id']} closed unexpectedly")
+                
+                # save vehicle position
+
+                dist = vehicle_location.distance(t.location)
                 if tick_counter % print_interval == 0:
                     print(f"Distance to waypoint: {dist:.2f} meters")
                 tick_counter += 1
@@ -289,12 +317,14 @@ def main():
     init_cameras(client, world, camera_data)
 
     # start worker function
-    worker(client, world)
+    vehicle_positions = []  # for now only one car
+    worker(client, world, camera_data, vehicle_positions)
 
     # cleanup
     stop_cameras(camera_data)
 
     # reset to async mode so we don't freeze the simulator
+    print("resetting to async...")
     settings = world.get_settings()
     settings.synchronous_mode = False
     settings.fixed_delta_seconds = None
