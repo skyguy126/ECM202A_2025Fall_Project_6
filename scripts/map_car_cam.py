@@ -63,7 +63,7 @@ def load_town(client):
     print("Spectator moved to bird's eye position.")
     print("loaded town")
 
-def worker(client, world, camera_data, vehicle_positions):
+def worker(client, world, camera_data, per_camera_vehicle_position):
 
     tm = client.get_trafficmanager(TM_PORT)
     tm.set_synchronous_mode(True)
@@ -180,20 +180,26 @@ def worker(client, world, camera_data, vehicle_positions):
                 speed = (velocity.x**2 + velocity.y**2 + velocity.z**2) ** 0.5
                 rot = transform.rotation
 
-                # save vehicle position
-                vehicle_positions.loc[len(vehicle_positions)] = {
-                    'x': vehicle_location.x,
-                    'y': vehicle_location.y,
-                    'z': vehicle_location.z,
-                    'theta1': rot.pitch,
-                    'theta2': rot.yaw,
-                    'theta3': rot.roll,
-                    'vx': velocity.x,
-                    'vy': velocity.y,
-                    'vz': velocity.z,
-                    'speed': speed,
-                    'car_visible': False,
-                }
+                # save vehicle position (one row per camera, each with its own car_visible)
+                for cam_idx, cam_info in enumerate(camera_data):
+                    x_min, y_min, x_max, y_max = cam_info['bbox']
+                    car_visible = (
+                        x_min <= vehicle_location.x <= x_max
+                        and y_min <= vehicle_location.y <= y_max
+                    )
+                    per_camera_vehicle_position[cam_idx].loc[len(per_camera_vehicle_position[cam_idx])] = {
+                        'x': vehicle_location.x,
+                        'y': vehicle_location.y,
+                        'z': vehicle_location.z,
+                        'theta1': rot.pitch,
+                        'theta2': rot.yaw,
+                        'theta3': rot.roll,
+                        'vx': velocity.x,
+                        'vy': velocity.y,
+                        'vz': velocity.z,
+                        'speed': speed,
+                        'car_visible': car_visible,
+                    }
                 # save camera frame
                 for cam_info in camera_data:
                     try:
@@ -292,13 +298,16 @@ def init_cameras(client, world, camera_data):
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL
         )
-        
+
+        bbox = util.camera_frustum_bbox_at_z(pos, rot, ground_z=0.0)
         camera_data.append({
             'camera': camera,
             'queue': q,
             'id': camera_id,
             'ffmpeg_proc': proc,
-            'filename': filename
+            'filename': filename,
+            'config': config,
+            'bbox': bbox,
         })
         
         print(f"Camera {camera_id} recording to {filename}")
@@ -332,16 +341,20 @@ def main():
     init_cameras(client, world, camera_data)
 
     # start worker function
-    vehicle_positions = pd.DataFrame(columns=['x', 'y', 'z', 'theta1', 'theta2', 'theta3', 'vx', 'vy', 'vz', 'speed', 'car_visible'])
-    total_frames = worker(client, world, camera_data, vehicle_positions)
-    assert total_frames == len(vehicle_positions), f"total_frames ({total_frames}) != len(vehicle_positions) ({len(vehicle_positions)})"
+    per_camera_vehicle_position = [
+        pd.DataFrame(columns=['x', 'y', 'z', 'theta1', 'theta2', 'theta3', 'vx', 'vy', 'vz', 'speed', 'car_visible'])
+        for _ in range(len(camera_data))
+    ]
+    total_frames = worker(client, world, camera_data, per_camera_vehicle_position)
+    for i, df in enumerate(per_camera_vehicle_position):
+        assert total_frames == len(df), f"total_frames ({total_frames}) != len(per_camera_vehicle_position[{i}]) ({len(df)})"
 
     # save truth dataframe to y/camera_X_truth.csv for each camera
     y_dir = os.path.join(ROOT_DIR, "y")
     os.makedirs(y_dir, exist_ok=True)
-    for cam_info in camera_data:
+    for cam_info, vp in zip(camera_data, per_camera_vehicle_position):
         path = os.path.join(y_dir, f"camera_{cam_info['id']}_truth.csv")
-        vehicle_positions.to_csv(path, index=False)
+        vp.to_csv(path, index=False)
         print(f"Saved truth to {path}")
 
     # save run parameters to params.json
