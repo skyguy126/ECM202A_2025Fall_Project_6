@@ -346,7 +346,7 @@ def main():
 
     # save run parameters to params.json
     camera_params = {
-        cfg["id"]: {"pos": list(cfg["pos"]), "rot": list(cfg["rot"])}
+        str(cfg["id"]): {"pos": list(cfg["pos"]), "rot": list(cfg["rot"])}
         for cfg in util.CAMERA_CONFIGS
     }
     params_path = os.path.join(ROOT_DIR, "params.json")
