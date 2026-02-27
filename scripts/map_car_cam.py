@@ -10,6 +10,10 @@ import numpy as np
 random.seed(42)
 np.random.seed(42)
 
+TM_PORT = 8000  # port for traffic manager
+TOWN_NAME = "Town05"
+
+# add debugging for print statements
 import builtins, traceback
 _real_print = builtins.print
 def hook(*a, **k):
@@ -19,16 +23,25 @@ def hook(*a, **k):
     _real_print(*a, **k)
 builtins.print = hook
 
-# -------------------------------------------
-# Configuration (edit these instead of using CLI args)
-# -------------------------------------------
-TM_PORT = 8000  # port for traffic manager
-
 def handle_sigterm(signum, frame):
     raise KeyboardInterrupt  # convert SIGTERM into KeyboardInterrupt
 
 # Register the handler
 signal.signal(signal.SIGTERM, handle_sigterm)
+
+def load_town(client):
+    print("loading town...")
+
+    world = client.load_world(TOWN_NAME)
+
+    spectator = world.get_spectator()
+    # High altitude straight-down
+    location = carla.Location(x=-50, y=0, z=260)
+    rotation = carla.Rotation(pitch=-90, yaw=0, roll=0)
+    spectator.set_transform(carla.Transform(location, rotation))
+
+    print("Spectator moved to bird’s eye position.")
+    print("loaded town")
 
 def worker(client, world):
 
@@ -59,7 +72,7 @@ def worker(client, world):
             outside_spawns.append(sp)
 
     # We can change the number of waypoints internally.
-    route_points = [random.choice(inside_spawns) for _ in range(100)]
+    route_points = [random.choice(inside_spawns) for _ in range(1000)]
 
     print("Spawn at:", route_points[0].location)
 
@@ -77,14 +90,14 @@ def worker(client, world):
         return
 
     world.player = vehicle 
-    vehicle.set_autopilot(False)  # Changed: BasicAgent controls it manually
+    # vehicle.set_autopilot(False, TM_PORT)  # important! BehaviorAgent controls it manually
+    vehicle.set_autopilot(False)
 
     # -----------------------------
     # Initialize the agent
     # -----------------------------
-    # Changed: Initialize BasicAgent instead of BehaviorAgent
+    # agent = BehaviorAgent(vehicle, ignore_traffic_light=True, behavior="normal")
     agent = BasicAgent(vehicle, target_speed=30)
-    # agent.ignore_traffic_lights(True)
 
     print("Starting route...")
 
@@ -99,6 +112,7 @@ def worker(client, world):
         print_interval = 20  # print every 20 ticks (~1 second if tick = 0.05s)
 
         for t in route_points[1:]:
+
             # Reject waypoint if behind the car or would cause route planner to U-turn
             loc = vehicle.get_location()
             transform = vehicle.get_transform()
@@ -111,7 +125,7 @@ def worker(client, world):
                 dir_y = dy / dist_to_wp
                 dot = forward.x * dir_x + forward.y * dir_y
                 # dot < 0: behind; dot < 0.5: sharp turn / potential U-turn (~60° off heading)
-                if dot < 0.5:
+                if dot < 0.77:
                     print("Skipping waypoint (behind vehicle or would cause U-turn):", t.location)
                     continue
             else:
@@ -119,7 +133,6 @@ def worker(client, world):
                 continue
 
             print("changing to new destination:", t.location)
-            
             # Changed: BasicAgent just needs the target location
             # Changed: Older BasicAgent requires a tuple (x, y, z), not a Location object
             agent.set_destination((t.location.x, t.location.y, t.location.z))
@@ -130,12 +143,11 @@ def worker(client, world):
             tick_counter = 0
 
             while True:
-                
+
                 # Changed: BasicAgent handles its own queue state elegantly
                 if agent.done():
                     break
 
-                # Changed: Run step and apply control manually
                 control = agent.run_step()
                 vehicle.apply_control(control)
                 world.tick()
@@ -145,7 +157,7 @@ def worker(client, world):
                     print(f"Distance to waypoint: {dist:.2f} meters")
                 tick_counter += 1
 
-                if dist < 4.0:  # distance tolerance to move to next waypoint
+                if dist < 20:  # distance tolerance to move to next waypoint
                     print("breaking due to distance heruistic")
                     break
 
@@ -154,6 +166,7 @@ def worker(client, world):
     finally:
         print("Destroying vehicle...")
         vehicle.destroy()
+
         # tick a few times to destroy the vehicle properly
         for _ in range(5):
             world.tick()
@@ -161,6 +174,8 @@ def worker(client, world):
 def main():
     client = carla.Client("localhost", 2000)
     client.set_timeout(5.0)
+
+    load_town(client)
     world = client.get_world()
 
     # start worker function
