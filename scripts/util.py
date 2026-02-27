@@ -46,6 +46,53 @@ CAMERA_CONFIGS = [
     {"id": "overhead", "pos": (-50, 0, 260), "rot": (-90, 0, 0)}
 ]
 
+def camera_frustum_bbox_at_z(camera_pos, camera_rot_deg, ground_z=0.0):
+    """
+    Project the camera view frustum onto the plane z=ground_z and return the
+    axis-aligned bounding box in world (x, y).
+
+    Args:
+        camera_pos: (x, y, z) tuple
+        camera_rot_deg: (pitch, yaw, roll) in degrees
+        ground_z: z value of the plane (default 0)
+
+    Returns:
+        (x_min, y_min, x_max, y_max) in world coordinates.
+    """
+    cam_loc = carla.Location(x=camera_pos[0], y=camera_pos[1], z=camera_pos[2])
+    cam_rot = carla.Rotation(
+        pitch=camera_rot_deg[0],
+        yaw=camera_rot_deg[1],
+        roll=camera_rot_deg[2]
+    )
+    transform = carla.Transform(cam_loc, cam_rot)
+    forward = transform.get_forward_vector()
+    right = transform.get_right_vector()
+    up = transform.get_up_vector()
+
+    fov_rad = np.deg2rad(FOV)
+    v_half = fov_rad / 2
+    aspect = WIDTH / HEIGHT
+    h_half = np.arctan(np.tan(v_half) * aspect)
+
+    points = []
+    for sr, su in [(-1, -1), (1, -1), (1, 1), (-1, 1)]:
+        dx = (
+            forward.x + sr * np.tan(h_half) * right.x + su * np.tan(v_half) * up.x,
+            forward.y + sr * np.tan(h_half) * right.y + su * np.tan(v_half) * up.y,
+            forward.z + sr * np.tan(h_half) * right.z + su * np.tan(v_half) * up.z,
+        )
+        norm = np.sqrt(dx[0]**2 + dx[1]**2 + dx[2]**2)
+        t = (ground_z - camera_pos[2]) / (dx[2] / norm)
+        px = camera_pos[0] + t * (dx[0] / norm)
+        py = camera_pos[1] + t * (dx[1] / norm)
+        points.append((px, py))
+
+    xs = [p[0] for p in points]
+    ys = [p[1] for p in points]
+    return (min(xs), min(ys), max(xs), max(ys))
+
+
 def common_init():
     random.seed(42)
 
