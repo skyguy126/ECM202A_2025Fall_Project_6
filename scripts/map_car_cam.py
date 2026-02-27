@@ -7,6 +7,7 @@ import signal
 from agents.navigation.basic_agent import BasicAgent
 import util
 import numpy as np
+import pandas as pd
 import argparse
 import datetime
 
@@ -19,7 +20,7 @@ SEED = args.seed if args.seed is not None else 42
 random.seed(SEED)
 np.random.seed(SEED)
 
-ROUTE_POINTS = 150
+ROUTE_POINTS = 100
 
 TM_PORT = 8000  # port for traffic manager
 TOWN_NAME = "Town05"
@@ -173,7 +174,25 @@ def worker(client, world, camera_data, vehicle_positions):
 
                 total_frames += 1
                 vehicle_location = vehicle.get_location()
+                transform = vehicle.get_transform()
+                velocity = vehicle.get_velocity()
+                speed = (velocity.x**2 + velocity.y**2 + velocity.z**2) ** 0.5
+                rot = transform.rotation
 
+                # save vehicle position
+                vehicle_positions.loc[len(vehicle_positions)] = {
+                    'x': vehicle_location.x,
+                    'y': vehicle_location.y,
+                    'z': vehicle_location.z,
+                    'theta1': rot.pitch,
+                    'theta2': rot.yaw,
+                    'theta3': rot.roll,
+                    'vx': velocity.x,
+                    'vy': velocity.y,
+                    'vz': velocity.z,
+                    'speed': speed,
+                    'car_visible': False,
+                }
                 # save camera frame
                 for cam_info in camera_data:
                     try:
@@ -196,8 +215,6 @@ def worker(client, world, camera_data, vehicle_positions):
                     except BrokenPipeError:
                         print(f"Warning: ffmpeg process for camera {cam_info['id']} closed unexpectedly")
                 
-                # save vehicle position
-
                 dist = vehicle_location.distance(t.location)
                 if tick_counter % print_interval == 0:
                     print(f"Distance to waypoint: {dist:.2f} meters")
@@ -317,8 +334,16 @@ def main():
     init_cameras(client, world, camera_data)
 
     # start worker function
-    vehicle_positions = []  # for now only one car
+    vehicle_positions = pd.DataFrame(columns=['x', 'y', 'z', 'theta1', 'theta2', 'theta3', 'vx', 'vy', 'vz', 'speed', 'car_visible'])
     worker(client, world, camera_data, vehicle_positions)
+
+    # save truth dataframe to y/camera_X_truth.csv for each camera
+    y_dir = os.path.join(ROOT_DIR, "y")
+    os.makedirs(y_dir, exist_ok=True)
+    for cam_info in camera_data:
+        path = os.path.join(y_dir, f"camera_{cam_info['id']}_truth.csv")
+        vehicle_positions.to_csv(path, index=False)
+        print(f"Saved truth to {path}")
 
     # cleanup
     stop_cameras(camera_data)
