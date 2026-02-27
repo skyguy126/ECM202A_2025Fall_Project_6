@@ -40,7 +40,7 @@ def load_town(client):
     rotation = carla.Rotation(pitch=-90, yaw=0, roll=0)
     spectator.set_transform(carla.Transform(location, rotation))
 
-    print("Spectator moved to bird’s eye position.")
+    print("Spectator moved to bird's eye position.")
     print("loaded town")
 
 def worker(client, world):
@@ -170,6 +170,10 @@ def worker(client, world):
         # tick a few times to destroy the vehicle properly
         for _ in range(5):
             world.tick()
+
+        # TODO: SANITY CHECK NUM FRAMES == TIMESTEPS
+        # TODO:
+        # TODO:
 
 def main():
     client = carla.Client("localhost", 2000)
