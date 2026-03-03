@@ -93,6 +93,24 @@ def camera_frustum_bbox_at_z(camera_pos, camera_rot_deg, ground_z=0.0):
     return (min(xs), min(ys), max(xs), max(ys))
 
 
+def make_agent_ignore_traffic_lights(agent):
+    """
+    BasicAgent in some CARLA versions has no set_ignore_traffic_lights().
+    Monkey-patch run_step so that _is_light_red is never treated as a hazard.
+    """
+    _original_run_step = agent.run_step
+    _original_is_light_red = agent._is_light_red
+
+    def _run_step_ignore_lights(debug=False):
+        agent._is_light_red = lambda lights_list: (False, None)
+        try:
+            return _original_run_step(debug)
+        finally:
+            agent._is_light_red = _original_is_light_red
+
+    agent.run_step = _run_step_ignore_lights
+
+
 def common_init():
     random.seed(42)
 

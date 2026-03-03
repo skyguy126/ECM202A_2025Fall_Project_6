@@ -7,6 +7,7 @@ from queue import Queue, Empty
 import signal
 from agents.navigation.basic_agent import BasicAgent
 import util
+from util import make_agent_ignore_traffic_lights
 import numpy as np
 import pandas as pd
 import argparse
@@ -119,6 +120,7 @@ def worker(client, world, camera_data, per_camera_vehicle_position):
     # -----------------------------
     # agent = BehaviorAgent(vehicle, ignore_traffic_light=True, behavior="normal")
     agent = BasicAgent(vehicle, target_speed=30)
+    make_agent_ignore_traffic_lights(agent)
 
     print("Starting route...")
 
