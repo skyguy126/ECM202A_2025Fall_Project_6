@@ -2,6 +2,7 @@ import carla
 import time
 import random
 import sys, os, subprocess
+import shutil
 import json
 from queue import Queue, Empty
 import signal
@@ -132,6 +133,7 @@ def worker(client, world, camera_data, per_camera_vehicle_position):
     # Simulation loop: destination-only, distance-based heuristic per waypoint
     # -------------------------------------------
     total_frames = 0
+    failed = False
     try:
         print_interval = 20  # print every 20 ticks (~1 second if tick = 0.05s)
 
@@ -165,6 +167,8 @@ def worker(client, world, camera_data, per_camera_vehicle_position):
                 world.tick()
 
             tick_counter = 0 # purely for printing
+            prev_dist = None
+            dist_stall_count = 0
 
             while True:
 
@@ -229,9 +233,25 @@ def worker(client, world, camera_data, per_camera_vehicle_position):
                     print(f"Distance to waypoint: {dist:.2f} meters")
                 tick_counter += 1
 
+                # If distance-to-waypoint stops changing for too long, bail out.
+                DIST_STALL_ITERS = 500
+                DIST_STALL_EPS = 0.25
+                if prev_dist is not None and abs(dist - prev_dist) <= DIST_STALL_EPS:
+                    dist_stall_count += 1
+                else:
+                    dist_stall_count = 0
+                prev_dist = dist
+                if dist_stall_count >= DIST_STALL_ITERS:
+                    print("Breaking: distance to waypoint stalled.")
+                    failed = True
+                    break
+
                 if dist < 20:  # distance tolerance to move to next waypoint
                     print("breaking due to distance heruistic")
                     break
+
+            if failed:
+                break
 
         print("Reached destination.")
         
@@ -243,7 +263,7 @@ def worker(client, world, camera_data, per_camera_vehicle_position):
         for _ in range(5):
             world.tick()
 
-    return total_frames
+    return total_frames, failed
 
 def init_cameras(client, world, camera_data):
     util.check_sync(world)
@@ -348,7 +368,7 @@ def main():
         pd.DataFrame(columns=['x', 'y', 'z', 'theta1', 'theta2', 'theta3', 'vx', 'vy', 'vz', 'speed', 'car_visible'])
         for _ in range(len(camera_data))
     ]
-    total_frames = worker(client, world, camera_data, per_camera_vehicle_position)
+    total_frames, failed = worker(client, world, camera_data, per_camera_vehicle_position)
     for i, df in enumerate(per_camera_vehicle_position):
         assert total_frames == len(df), f"total_frames ({total_frames}) != len(per_camera_vehicle_position[{i}]) ({len(df)})"
 
@@ -383,6 +403,10 @@ def main():
     settings.synchronous_mode = False
     settings.fixed_delta_seconds = None
     world.apply_settings(settings)
+
+    if failed:
+        shutil.rmtree(ROOT_DIR, ignore_errors=True)
+        print(f"FAILURE: distance-to-waypoint stalled; deleted saved folder {ROOT_DIR}")
 
 if __name__ == "__main__":
     try:
