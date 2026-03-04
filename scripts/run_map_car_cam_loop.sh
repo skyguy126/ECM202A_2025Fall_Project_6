@@ -2,8 +2,8 @@
 # Run map_car_cam.py in a loop with configurable delay and incrementing seed.
 
 DELAY_SEC=5
-NUM_ITERATIONS=30
-START_SEED=43
+NUM_ITERATIONS=50
+START_SEED=74
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
