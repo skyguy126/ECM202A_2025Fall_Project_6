@@ -1,6 +1,8 @@
+import argparse
 import glob
 import os
 import subprocess
+import sys
 import time
 from mn_wifi.net import Mininet_wifi
 from mn_wifi.cli import CLI
@@ -10,8 +12,6 @@ from mininet.log import setLogLevel, info
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 TCPDUMP_LOG_FILE = os.path.join(PROJECT_ROOT, 'tcpdump.log')
-PCAP_DIR = os.path.join(PROJECT_ROOT, 'pcaps')
-VIDEO_DIR = "/home/wifi/videos"
 MONITOR_INTERFACE = "hwsim0"
 
 UDP_PORT = 5000
@@ -30,13 +30,6 @@ def start_ffmpeg_receiver(sta2, log_path):
 
 def stop_ffmpeg_receiver(sta2):
     sta2.cmd("pkill -f 'ffmpeg .*udp://0.0.0.0' || true")
-
-
-def get_video_files():
-    video_files = sorted(glob.glob(os.path.join(VIDEO_DIR, "*.mp4")))
-    if not video_files:
-        info(f"*** No .mp4 files found in {VIDEO_DIR}\n")
-    return video_files
 
 
 def start_tcpdump_capture(pcap_path):
@@ -71,7 +64,7 @@ def stop_tcpdump_capture(proc, log_handle):
 
 def stream_single_video(sta1, sta2, video_path):
     basename = os.path.splitext(os.path.basename(video_path))[0]
-    pcap_path = os.path.join(PCAP_DIR, f"{basename}.pcap")
+    pcap_path = os.path.join(os.path.dirname(video_path), f"{basename}.pcap")
     receiver_log = f"/tmp/ffmpeg_sta2_{basename}.log"
     sender_log = f"/tmp/ffmpeg_sta1_{basename}.log"
 
@@ -95,13 +88,12 @@ def stream_single_video(sta1, sta2, video_path):
     info(f"*** Completed {video_path}\n")
 
 
-def stream_all_videos(sta1, sta2):
-    video_files = get_video_files()
-    if not video_files:
+def stream_all_videos(sta1, sta2, video_paths_array):
+    if not video_paths_array:
         return
 
-    info(f"*** Streaming {len(video_files)} video(s) sequentially\n")
-    for video_path in video_files:
+    info(f"*** Streaming {len(video_paths_array)} video(s) sequentially\n")
+    for video_path in video_paths_array:
         stream_single_video(sta1, sta2, video_path)
 
 
@@ -110,11 +102,6 @@ def cleanup_previous_outputs():
         os.remove(TCPDUMP_LOG_FILE)
     except FileNotFoundError:
         pass
-
-    if os.path.isdir(PCAP_DIR):
-        for filename in os.listdir(PCAP_DIR):
-            if filename.endswith(".pcap"):
-                os.remove(os.path.join(PCAP_DIR, filename))
 
 def wait_associated(sta, ifname):
     timeout_s = 10.0
@@ -130,7 +117,7 @@ def wait_associated(sta, ifname):
         waited += interval
     info(f"*** Warning: {sta.name} not associated after {timeout_s}s\n")
 
-def build_and_run_topology():
+def build_and_run_topology(video_paths_array):
     setLogLevel('info')
     # Use wmediumd with interference so frames traverse the "air"
     net = Mininet_wifi(link=wmediumd, wmediumd_mode=interference)
@@ -196,7 +183,7 @@ def build_and_run_topology():
     CLI(net)
 
     info("*** Starting sequential streaming workload\n")
-    stream_all_videos(sta1, sta2)
+    stream_all_videos(sta1, sta2, video_paths_array)
 
     info("*** Streaming complete.\n")
 
@@ -206,8 +193,34 @@ def build_and_run_topology():
     net.stop()
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Mininet-WiFi two-station video streaming")
+    parser.add_argument(
+        "root_dir",
+        nargs="?",
+        help="Root directory containing <datetime>/videos/*.mp4 structure",
+    )
+    args = parser.parse_args()
+    if not args.root_dir:
+        print("error: root_dir is required", file=sys.stderr)
+        sys.exit(0)
+
+    root_dir = os.path.abspath(args.root_dir)
+    print(f"*** Streaming videos from {root_dir}\n")
+
+    # Folder structure: <datetime string>/videos/*.mp4 — concatenate all MP4 paths into an array, skipping files with "_overhead" in the filename
+    video_paths_array = []
+    for dt_dir in sorted(glob.glob(os.path.join(root_dir, "*"))):
+        if os.path.isdir(dt_dir):
+            videos_subdir = os.path.join(dt_dir, "videos")
+            if os.path.isdir(videos_subdir):
+                mp4_files = sorted(glob.glob(os.path.join(videos_subdir, "*.mp4")))
+                filtered_files = [f for f in mp4_files if "_overhead" not in os.path.basename(f)]
+                video_paths_array.extend(filtered_files)
+
+    print(f"*** Found {len(video_paths_array)} video files\n")
+
     cleanup_previous_outputs()
-    build_and_run_topology()
+    build_and_run_topology(video_paths_array)
 
     if os.path.exists(TCPDUMP_LOG_FILE):
         with open(TCPDUMP_LOG_FILE) as f:
