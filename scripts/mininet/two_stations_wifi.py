@@ -10,8 +10,6 @@ from mn_wifi.link import wmediumd
 from mn_wifi.wmediumdConnector import interference
 from mininet.log import setLogLevel, info
 
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-TCPDUMP_LOG_FILE = os.path.join(PROJECT_ROOT, 'tcpdump.log')
 MONITOR_INTERFACE = "hwsim0"
 
 UDP_PORT = 5000
@@ -32,11 +30,11 @@ def stop_ffmpeg_receiver(sta2):
     sta2.cmd("pkill -f 'ffmpeg .*udp://0.0.0.0' || true")
 
 
-def start_tcpdump_capture(pcap_path):
+def start_tcpdump_capture(pcap_path, tcpdump_log_path):
     os.makedirs(os.path.dirname(pcap_path), exist_ok=True)
     os.system(f"ifconfig {MONITOR_INTERFACE} up")
     info(f"*** Starting tcpdump capture to {pcap_path}\n")
-    log_handle = open(TCPDUMP_LOG_FILE, "a")
+    log_handle = open(tcpdump_log_path, "a")
     proc = subprocess.Popen(
         [
             "tcpdump",
@@ -62,13 +60,13 @@ def stop_tcpdump_capture(proc, log_handle):
     log_handle.close()
 
 
-def stream_single_video(sta1, sta2, video_path):
+def stream_single_video(sta1, sta2, video_path, tcpdump_log_path):
     basename = os.path.splitext(os.path.basename(video_path))[0]
     pcap_path = os.path.join(os.path.dirname(video_path), f"{basename}.pcap")
     receiver_log = f"/tmp/ffmpeg_sta2_{basename}.log"
     sender_log = f"/tmp/ffmpeg_sta1_{basename}.log"
 
-    tcpdump_proc, tcpdump_log = start_tcpdump_capture(pcap_path)
+    tcpdump_proc, tcpdump_log = start_tcpdump_capture(pcap_path, tcpdump_log_path)
     start_ffmpeg_receiver(sta2, receiver_log)
     time.sleep(1)
 
@@ -88,18 +86,18 @@ def stream_single_video(sta1, sta2, video_path):
     info(f"*** Completed {video_path}\n")
 
 
-def stream_all_videos(sta1, sta2, video_paths_array):
+def stream_all_videos(sta1, sta2, video_paths_array, tcpdump_log_path):
     if not video_paths_array:
         return
 
     info(f"*** Streaming {len(video_paths_array)} video(s) sequentially\n")
     for video_path in video_paths_array:
-        stream_single_video(sta1, sta2, video_path)
+        stream_single_video(sta1, sta2, video_path, tcpdump_log_path)
 
 
-def cleanup_previous_outputs():
+def cleanup_previous_outputs(tcpdump_log_path):
     try:
-        os.remove(TCPDUMP_LOG_FILE)
+        os.remove(tcpdump_log_path)
     except FileNotFoundError:
         pass
 
@@ -117,7 +115,7 @@ def wait_associated(sta, ifname):
         waited += interval
     info(f"*** Warning: {sta.name} not associated after {timeout_s}s\n")
 
-def build_and_run_topology(video_paths_array):
+def build_and_run_topology(video_paths_array, tcpdump_log_path):
     setLogLevel('info')
     # Use wmediumd with interference so frames traverse the "air"
     net = Mininet_wifi(link=wmediumd, wmediumd_mode=interference)
@@ -183,7 +181,7 @@ def build_and_run_topology(video_paths_array):
     CLI(net)
 
     info("*** Starting sequential streaming workload\n")
-    stream_all_videos(sta1, sta2, video_paths_array)
+    stream_all_videos(sta1, sta2, video_paths_array, tcpdump_log_path)
 
     info("*** Streaming complete.\n")
 
@@ -219,13 +217,14 @@ if __name__ == "__main__":
 
     print(f"*** Found {len(video_paths_array)} video files\n")
 
-    cleanup_previous_outputs()
-    build_and_run_topology(video_paths_array)
+    tcpdump_log_path = os.path.join(root_dir, "tcpdump.log")
+    cleanup_previous_outputs(tcpdump_log_path)
+    build_and_run_topology(video_paths_array, tcpdump_log_path)
 
-    if os.path.exists(TCPDUMP_LOG_FILE):
-        with open(TCPDUMP_LOG_FILE) as f:
+    if os.path.exists(tcpdump_log_path):
+        with open(tcpdump_log_path) as f:
             print(f.read())
     else:
-        info(f"*** No tcpdump log found at {TCPDUMP_LOG_FILE}\n")
+        info(f"*** No tcpdump log found at {tcpdump_log_path}\n")
 
     print("\nDone!")
